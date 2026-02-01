@@ -1,0 +1,11 @@
+---
+title: "home_work_1_mqari"
+author: "Mubashira Qari"
+date: "2026-02-01"
+output: html_document
+---
+
+```{r}
+
+```
+
