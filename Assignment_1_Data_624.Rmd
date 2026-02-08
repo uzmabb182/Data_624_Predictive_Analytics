@@ -5,12 +5,192 @@ date: "2026-02-01"
 output: html_document
 ---
 
-```{r}
+# 2.10 Exercises
+# 1. Explore the following four time series: Bricks from aus_production, Lynx from pelt, Close from gafa_stock, Demand from vic_elec.
 
+# Use ? (or help()) to find out about the data in each series.
+
+# Bricks from aus_production
+
+```{r}
+library(fpp3)
+
+# Access help documentation
+?aus_production
+
+```
+
+# What is the time interval of each series?
+
+Quarterly production of selected commodities in Australia.
+
+Description
+Quarterly estimates of selected indicators of manufacturing production in Australia.
+
+Format
+Time series of class tsibble.
+
+Details
+aus_production is a half-hourly tsibble with six values:
+
+Beer:	Beer production in megalitres.
+Tobacco:	Tobacco and cigarette production in tonnes.
+Bricks:	Clay brick production in millions of bricks.
+Cement:	Portland cement production in thousands of tonnes.
+Electricity:	Electricity production in gigawatt hours.
+Gas:	Gas production in petajoules.
+Source
+Australian Bureau of Statistics, catalogue number 8301.0.55.001 table 1.
+
+# Use autoplot() to produce a time plot of each series.
+
+```{r}
+# Plot of the Bricks time series
+aus_production |>
+  autoplot(Bricks) +
+  labs(title = "Australian Quarterly Clay Brick Production", y = "Millions of Bricks")
+```
+# Lynx from pelt
+
+```{r}
+# Access help documentation
+?pelt
+
+```
+
+# What is the time interval of each series?
+ 
+This is Annual Pelt trading records
+Description
+Hudson Bay Company trading records for Snowshoe Hare and Canadian Lynx furs from 1845 to 1935. This data contains trade records for all areas of the company.
+
+Format
+Time series of class tsibble
+
+Details
+pelt is an annual tsibble with two values:
+
+Hare:	The number of Snowshoe Hare pelts traded.
+Lynx:	The number of Canadian Lynx pelts traded.
+Source
+Hudson Bay Company
+
+# Use autoplot() to produce a time plot of each series.
+
+```{r}
+# Plot of the Lynx time series
+pelt |>
+  autoplot(Lynx) +
+  labs(title = "Canadian Annual Lynx Pelts Trade", y = "Number of Pelts")
+```
+# Close from gafa_stock
+
+```{r}
+# Access help documentation
+?gafa_stock
+```
+
+# What is the time interval of each series?
+
+This is Daily GAFA stock prices
+Description
+Historical stock prices from 2014-2018 for Google, Amazon, Facebook and Apple. All prices are in $USD.
+
+Format
+Time series of class tsibble
+
+Details
+gafa_stock is a tsibble containing data on irregular trading days:
+
+Open:	The opening price for the stock.
+High:	The stock's highest trading price.
+Low:	The stock's lowest trading price.
+Close:	The closing price for the stock.
+Adj_Close:	The adjusted closing price for the stock.
+Volume:	The amount of stock traded.
+Each stock is uniquely identified by one key:
+
+Symbol:	The ticker symbol for the stock.
+Source
+Yahoo Finance historical data
+
+# Use autoplot() to produce a time plot of each series.
+
+```{r}
+# Plot of the Closing prices for all stocks
+gafa_stock |>
+  autoplot(Close) +
+  labs(title = "GAFA Daily Closing Stock Prices", y = "Price ($US)")
+```
+# Demand from vic_elec
+
+```{r}
+# Access help documentation
+?vic_elec
+```
+
+# What is the time interval of each series?
+
+Half-hourly electricity demand for Victoria, Australia
+
+Description
+vic_elec is a half-hourly tsibble with three values:
+
+Demand:	Total electricity demand in MWh.
+Temperature:	Temperature of Melbourne (BOM site 086071).
+Holiday:	Indicator for if that day is a public holiday.
+Format
+Time series of class tsibble.
+
+Details
+This data is for operational demand, which is the demand met by local scheduled generating units, semi-scheduled generating units, and non-scheduled intermittent generating units of aggregate capacity larger than 30 MWh, and by generation imports to the region. The operational demand excludes the demand met by non-scheduled non-intermittent generating units, non-scheduled intermittent generating units of aggregate capacity smaller than 30 MWh, exempt generation (e.g. rooftop solar, gas tri-generation, very small wind farms, etc), and demand of local scheduled loads. It also excludes some very large industrial users (such as mines or smelters).
+
+Source
+Australian Energy Market Operator.
+
+# Use autoplot() to produce a time plot of each series.
+
+```{r}
+# Plot of the Electricity Demand
+vic_elec |>
+  autoplot(Demand) +
+  labs(title = "Australia: Victoria Half-Hourly Electricity Demand", y = "MWh")
+```
+
+# For the last plot, modify the axis labels and title.
+
+```{r}
+# Plot of the Electricity Demand
+vic_elec |>
+  autoplot(Demand) +
+labs(
+    title = "Victoria Electricity Half-Hourly Demand",
+    y = "Demand (Megawatts)",
+    x = "Time (Half-Hourly)"
+  )
+```
+
+# 2. Use filter() to find what days corresponded to the peak closing price for each of the four stocks in gafa_stock.
+
+```{r}
+gafa_stock
 ```
 
 
 ```{r}
+gafa_stock |>
+  group_by(Symbol) |>
+  filter(Close == max(Close)) |>
+  arrange(desc(Close)) -> gafa_peak_closing_price
 
+gafa_peak_closing_price
+```
+
+
+```{r}
+```
+
+
+```{r}
 ```
 
