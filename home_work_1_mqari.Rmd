@@ -6,6 +6,535 @@ output: html_document
 ---
 
 ```{r}
+library(fpp3)
+```
+```{r}
+global_economy
+```
 
+```{r}
+tourism
+
+```
+
+```{r}
+# Creating tsibble
+mydata <- tsibble (
+  year = 2015:2019,
+  y = c(123,39,78,52,110),
+  index =year
+)
+mydata
+```
+
+
+```{r}
+# Creating tsibble
+mydata <- tibble (
+  year = 2015:2019,
+  y = c(123,39,78,52,110)
+) |>
+  as_tsibble(index = year)
+  
+mydata
+```
+
+
+```{r}
+library(tibble)
+
+z <- tibble(
+  Month = c("2019 Jan", "2019 Feb", "2019 Mar", "2019 Apr", "2019 May"),
+  Observation = c(50, 23, 34, 30, 25)
+)
+
+z
+
+
+```
+
+```{r}
+z |> 
+  mutate(Month =yearmonth(Month)) |>
+  as_tsibble(index = Month)
+```
+```{r}
+prison <- readr::read_csv("C:/Users/Uzma/CUNY-SPS-Assignments/Data_624/Data_624_Predictive_Analytics/prison_population.csv")
+
+prison
+```
+```{r}
+library(readr)
+library(dplyr)
+library(tsibble)
+library(lubridate)
+
+prison <- read_csv(
+  "C:/Users/Uzma/CUNY-SPS-Assignments/Data_624/Data_624_Predictive_Analytics/prison_population.csv"
+) |>
+  mutate(
+    Date = as.Date(Date),          # ensure proper date
+    Quarter = yearquarter(Date)
+  ) |>
+  as_tsibble(
+    index = Quarter,
+    key = c(State, Gender, Legal, Indigenous)
+  )
+
+prison
+
+```
+```{r}
+PBS
+```
+
+```{r}
+# Use filter function to select rows
+PBS |>
+  filter(ATC2 == "A10") |>
+  select(Month, Concession,Type, Cost) |>
+  summarise(TotalC = sum(Cost)) |>
+  mutate(Cost =TotalC/1e6) -> a10
+
+a10
+```
+
+
+```{r}
+# Note it will pick the first variable it sees - hence select appropriate variable
+a10 |> 
+  autoplot(Cost) + labs(y="$(millions)",
+                        title="Australian antidiabetic drug sales")
+```
+# Also note points/obs are joint by lines
+
+```{r}
+# This is not useful for me since we want to see the patterns
+a10 |>
+  ggplot(aes(x=Month, y=Cost)) +
+  geom_point()
+
+```
+```{r}
+# So we join the points with line so see the patterns
+a10 |>
+  ggplot(aes(x=Month, y=Cost)) +
+  geom_line()
+```
+
+```{r}
+a10 |> 
+  autoplot(Cost)
+```
+```{r}
+a10 |> 
+  autoplot(Cost) + geom_point()
+```
+
+```{r}
+a10 |> 
+  autoplot(Cost) + geom_point() +
+  labs(title = "Antidiabetics drug sales",
+       y = "$ million")
+```
+```{r}
+ansett
+```
+
+
+
+```{r}
+ansett |>
+  autoplot(Passengers)
+```
+
+
+```{r}
+ansett |> distinct(Class)
+# ansett |> distinct(Airports)
+```
+# 10 Airport * 3 Class = 30 unique time series
+
+```{r}
+ansett |> 
+  filter(Class=="Economy") |>
+  autoplot()
+```
+# Lets filter little more
+
+```{r}
+melsyd_economy <- ansett |>
+  filter(Airports == "MEL-SYD") |>
+  select(-Airports)
+
+melsyd_economy
+```
+
+```{r}
+melsyd_economy |>autoplot()
+```
+
+
+```{r}
+melsyd_economy <- ansett |>
+  filter(Airports == "MEL-SYD", Class == "Economy") |>
+  mutate(Passengers = Passengers/1000)
+autoplot(melsyd_economy, Passengers) +
+  labs(title = "Ansett airlines economy class",
+       subtitle = "Melbourne-Sydney",
+       y = "Passengers ('000)")
+```
+
+# Time Series Patterns
+
+```{r}
+aus_production
+```
+
+
+```{r}
+aus_production |>
+  filter(year(Quarter) >= 1980) |>
+  autoplot(Electricity) +
+  labs(y = "GWh", title = "Australian electricity production")
+```
+
+
+```{r}
+aus_production |>
+  autoplot(Bricks) +
+  labs(y = "millio units", title = "Australian clay brick production")
+```
+```{r}
+us_employment
+names(us_employment)
+```
+
+
+```{r}
+
+us_employment |>
+  filter(
+   Title == "Retail Trade",
+    year(Month) >= 1980) |>
+  autoplot(Employed / 1e3) +
+  labs(
+    y = "Million people",
+    title = "Retail employment, Australia"
+  )
+```
+```{r}
+
+gafa_stock %>%
+  filter(Symbol == "AMZN", year(Date) == 2018) %>%
+  autoplot(Close) +
+  labs(y = "$US",
+       title = "Amazon closing stock price")
+```
+
+
+```{r}
+
+pelt|>
+  autoplot(Lynx) +
+  labs(y="Number trapped", title = "Annual Canadian Lynx Trappings")
+```
+
+```{r}
+a10 |>
+  gg_season(Cost, labels = "both") +
+  labs(y = "$ (millions)",
+       title = "Seasonal plot: Antidiabetic drug sales")
+```
+
+```{r}
+library(fpp3)
+
+# Filter for quarterly beer production from 1992 onwards
+beer <- aus_production |>
+  select(Quarter, Beer) |>
+  filter(year(Quarter) >= 1992)
+
+# Standard Time Plot
+beer |>
+  autoplot(Beer) +
+  labs(title = "Australian quarterly beer production",
+       y = "Megalitres")
+```
+
+```{r}
+# Standard Time Plot
+beer |>
+  autoplot(Beer) + geom_point()
+  labs(title = "Australian quarterly beer production",
+       y = "Megalitres")
+```
+
+```{r}
+beer |> gg_season(Beer, labels="right")
+```
+```{r}
+vic_elec
+```
+
+
+```{r}
+vic_elec |> gg_season(Demand)
+```
+```{r}
+vic_elec |> autoplot()
+```
+
+
+```{r}
+vic_elec |> gg_season(Demand, period = "week")
+```
+
+```{r}
+vic_elec |> gg_season(Demand, period = "day")
+```
+```{r}
+a10 |>
+  gg_subseries(Cost) +
+  labs(
+    y = "$ (millions)",
+    title = "Australian antidiabetic drug sales"
+  )
+```
+
+
+```{r}
+beer |> gg_subseries(Beer)
+
+```
+
+
+```{r}
+holidays <- tourism |>
+  filter(Purpose == "Holiday") |>
+  group_by(State) |>
+  summarise(Trips = sum(Trips))
+
+holidays
+```
+
+```{r}
+autoplot(holidays, Trips) +
+  labs(y = "Overnight trips ('000)",
+       title = "Australian domestic holidays")
+```
+
+```{r}
+gg_season(holidays, Trips) +
+  labs(y = "Overnight trips ('000)",
+       title = "Australian domestic holidays")
+```
+
+```{r}
+holidays |>
+  gg_subseries(Trips) +
+  labs(y = "Overnight trips ('000)",
+       title = "Australian domestic holidays")
+```
+```{r}
+holidays |> gg_subseries(Trips) +
+  facet_wrap(vars(State), nrow=2, scales="free_y")+
+  labs(y = "Thousands of trips", title = "Australian domestic holidays night")
+```
+```{r}
+vic_elec |>
+  filter(year(Time) == 2014) |>
+  autoplot(Demand) +
+  labs(y = "GW",
+       title = "Half-hourly electricity demand: Victoria")
+```
+
+```{r}
+library(fpp3)
+
+vic_elec_day_type <- vic_elec |>
+  filter(year(Time) == 2014) |>
+  mutate(
+    # Create a new column 'Day_Type' to categorize days
+    Day_Type = case_when(
+      Holiday ~ "Holiday",             # If it is a Public Holiday
+      wday(Date) %in% 2:6 ~ "Weekday", # If it is Sunday (1) or Saturday (7)
+      TRUE ~ "Weekend"                 # Otherwise, it is a Workday
+    ))
+vic_elec_day_type
+```
+```{r}
+vic_elec |>
+  filter(year(Time) == 2014) |>
+  autoplot(Temperature) +
+  labs(
+    y = "Degrees Celsius",
+    title = "Half-hourly temperatures: Melbourne, Australia"
+  )
+```
+
+
+```{r}
+vic_elec |>
+  filter(year(Time) == 2014) |>
+  ggplot(aes(x = Temperature, y = Demand)) +
+  geom_point() +
+  labs(title="Electricity demand versus Temperature",
+       x = "Temperature (degrees Celsius)",
+       y = "Electricity demand (GW)")
+```
+
+
+```{r}
+vic_elec_day_type |>
+  filter(year(Time) == 2014) |>
+  ggplot(aes(x = Temperature, y = Demand, colour=Day_Type)) +
+  geom_point() +
+  labs(title="Electricity demand versus Temperature",
+       x = "Temperature (degrees Celsius)",
+       y = "Electricity demand (GW)")
+```
+```{r}
+library(fpp3)
+
+us_change
+
+```
+
+
+```{r}
+visitors <- tourism |>
+  group_by(State) |>
+  summarise(Trips = sum(Trips))
+visitors |>
+  ggplot(aes(x = Quarter, y = Trips)) +
+  geom_line() +
+  facet_grid(vars(State), scales = "free_y") +
+  labs(title = "Australian domestic tourism",
+       y= "Overnight trips ('000)")
+```
+
+
+```{r}
+visitors |>
+  pivot_wider(values_from=Trips, names_from=State) |>
+  GGally::ggpairs(columns = 2:9)
+```
+
+
+```{r}
+recent_production |> gg_lag(Beer, geom ="point")
+```
+
+```{r}
+recent_production |> gg_lag(Beer)
+```
+
+
+```{r}
+recent_production <- aus_production |>
+  filter(year(Quarter) >= 2000)
+recent_production |>
+  gg_lag(Beer, geom = "point") +
+  labs(x = "lag(Beer, k)")
+```
+
+```{r}
+recent_production |> ACF(Beer, lag_max =9)
+```
+
+
+```{r}
+
+recent_production |> ACF(Beer, lag_max =9) |> autoplot()
+```
+
+
+```{r}
+recent_production |> ACF(Beer, lag_max = 9)
+#> # A tsibble: 9 x 2 [1Q]
+#>        lag      acf
+#>   <cf_lag>    <dbl>
+#> 1       1Q -0.0530 
+#> 2       2Q -0.758  
+#> 3       3Q -0.0262 
+#> 4       4Q  0.802  
+#> 5       5Q -0.0775 
+#> 6       6Q -0.657  
+#> 7       7Q  0.00119
+#> 8       8Q  0.707  
+#> 9       9Q -0.0888
+```
+```{r}
+recent_production |>
+  ACF(Beer) |>
+  autoplot() + labs(title="Australian beer production")
+```
+
+```{r}
+a10 |>
+  ACF(Cost, lag_max = 48) |>
+  autoplot() +
+  labs(title="Australian antidiabetic drug sales")
+```
+```{r}
+library(fpp3)
+
+# Create the google_2015 object
+google_2015 <- gafa_stock |>
+  filter(Symbol == "GOOG", year(Date) == 2015) |>
+  select(Date, Close)
+google_2015
+```
+
+
+```{r}
+# Plot the closing price
+google_2015 %>%
+  autoplot(Close) +
+  labs(y = "$US",
+       title = "Google closing stock price (2015)")
+```
+```{r}
+# Create the ACF Plot
+google_2015 %>%
+  ACF(Close, lag_max = 50)|>
+  autoplot() +
+  labs(title = "Google closing stock price (2015)")
+```
+```{r}
+set.seed(30)
+y <- tsibble(sample = 1:50, wn = rnorm(50), index = sample)
+y |> autoplot(wn) + labs(title = "White noise", y = "")
+```
+
+```{r}
+y |>
+  ACF(wn) |>
+  autoplot() + labs(title = "White noise")
+```
+```{r}
+# Filter for Pig slaughter in Victoria (2014-2019)
+pigs <- aus_livestock %>%
+  filter(State == "Victoria", Animal == "Pigs", year(Month) >= 2014)
+
+pigs
+```
+
+
+```{r}
+# Plot the time series to see the monthly fluctuations
+pigs |>
+  autoplot(Count) +
+  labs(y = "Count",
+       title = "Number of pigs slaughtered in Victoria")
+```
+
+```{r}
+# Plot the ACF
+pigs |>
+  ACF(Count) |>
+  autoplot() +
+  labs(title = "ACF of pigs slaughtered in Victoria")
 ```
 

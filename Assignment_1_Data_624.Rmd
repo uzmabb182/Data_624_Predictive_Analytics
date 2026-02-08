@@ -1,0 +1,16 @@
+---
+title: "Assignment_1_Data_624"
+author: "Mubashira Qari"
+date: "2026-02-01"
+output: html_document
+---
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
