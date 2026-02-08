@@ -173,7 +173,7 @@ labs(
 # 2. Use filter() to find what days corresponded to the peak closing price for each of the four stocks in gafa_stock.
 
 ```{r}
-gafa_stock
+view(gafa_stock)
 ```
 
 
@@ -183,13 +183,53 @@ gafa_stock |>
   filter(Close == max(Close)) |>
   arrange(desc(Close)) -> gafa_peak_closing_price
 
-gafa_peak_closing_price
+view(gafa_peak_closing_price)
+```
+# Download the file tute1.csv from the book website....
+
+# a. You can read the data into R with the following script:
+
+```{r message=FALSE}
+
+tute1 <- readr::read_csv("https://raw.githubusercontent.com/uzmabb182/Data_624_Predictive_Analytics/refs/heads/main/tute1.csv")
+View(tute1)
 ```
 
+# b. Convert the data to time series
 
 ```{r}
+
+mytimeseries <- tute1 |>
+  mutate(Quarter = yearquarter(Quarter)) |>
+  as_tsibble(index = Quarter)
+
+view(mytimeseries)
 ```
 
+# c. Construct time series plots of each of the three series
+
+```{r}
+mytimeseries |>
+  pivot_longer(-Quarter) |>
+  ggplot(aes(x = Quarter, y = value, colour = name)) +
+  geom_line() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+# Check what happens when you don’t include facet_grid().
+
+```{r}
+mytimeseries |>
+  pivot_longer(-Quarter) |>
+  ggplot(aes(x = Quarter, y = value, colour = name)) +
+  geom_line()
+```
+facet_grid with scales = "free_y" allow each variable to have its own y-axis range.
+Without it all variables will fit on the same y-axis.
+The small variable will look like a flat straight line at the bottom of the chart and the pattern will not be displayed clearly.
+
+# The USgas package contains data on the demand for natural gas in the US.
+
+# a. The USgas package contains data on the demand for natural gas in the US
 
 ```{r}
 ```
