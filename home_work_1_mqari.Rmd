@@ -342,12 +342,274 @@ holidays |> gg_subseries(Trips) +
   labs(y = "Thousands of trips", title = "Australian domestic holidays night")
 ```
 ```{r}
+vic_elec
+```
+
+
+
+```{r}
 vic_elec |>
   filter(year(Time) == 2014) |>
   autoplot(Demand) +
   labs(y = "GW",
        title = "Half-hourly electricity demand: Victoria")
 ```
+🔹 Step 1: Load the package
+library(fpp3)
+
+What this does:
+
+Loads the fpp3 package.
+
+fpp3 stands for Forecasting: Principles and Practice (3rd edition).
+
+It includes tools for:
+
+Time series analysis
+
+Forecasting models
+
+Data manipulation (via tidyverse packages like dplyr)
+
+It also contains the dataset vic_elec, which is what you're using.
+
+🔹 Step 2: Start with the dataset
+vic_elec_day_type <- vic_elec |>
+
+What’s happening:
+
+vic_elec is a built-in dataset in fpp3.
+
+It contains electricity demand data for Victoria, Australia.
+
+You’re creating a new object called:
+
+vic_elec_day_type
+
+
+So you're saying:
+
+“Take vic_elec, transform it, and store the result in vic_elec_day_type.”
+
+🔹 Step 3: The Pipe Operator |>
+
+This symbol:
+
+|>
+
+
+is called the pipe operator.
+
+What it means:
+
+“Take the result from the left, and pass it into the function on the right.”
+
+Instead of writing:
+
+filter(vic_elec, year(Time) == 2014)
+
+
+You write:
+
+vic_elec |> filter(year(Time) == 2014)
+
+
+It reads like English:
+
+Take vic_elec, then filter it.
+
+Much cleaner and easier to read.
+
+🔹 Step 4: Filter only 2014
+filter(year(Time) == 2014)
+
+What this does:
+
+filter() keeps only rows that match a condition.
+
+year(Time) extracts the year from the Time column.
+
+== 2014 keeps only data from 2014.
+
+So:
+
+Keep only rows where the year is 2014.
+
+Now your dataset contains only 2014 electricity data.
+
+🔹 Step 5: Create a new column with mutate()
+mutate(
+  Day_Type = case_when(
+
+What is mutate()?
+
+mutate() creates new columns or modifies existing ones.
+
+Here you're creating a new column called:
+
+Day_Type
+
+🔹 Step 6: Understanding case_when()
+
+This is very important to understand.
+
+case_when() works like an if-else ladder.
+
+Basic structure:
+
+case_when(
+  condition1 ~ "result1",
+  condition2 ~ "result2",
+  TRUE ~ "default"
+)
+
+
+It checks conditions in order, and uses the first one that is TRUE.
+
+🔹 Step 7: First condition — Holiday
+Holiday ~ "Holiday"
+
+
+If the Holiday column is TRUE:
+
+➡ assign "Holiday" to Day_Type
+
+So all public holidays are labeled "Holiday".
+
+🔹 Step 8: Second condition — Weekday
+wday(Date) %in% 2:6 ~ "Weekday"
+
+
+Let’s break this apart:
+
+🔹 wday(Date)
+
+wday() extracts the day of the week
+
+Returns numbers:
+
+1 = Sunday
+
+2 = Monday
+
+3 = Tuesday
+
+4 = Wednesday
+
+5 = Thursday
+
+6 = Friday
+
+7 = Saturday
+
+🔹 %in% 2:6
+
+2:6 means numbers 2,3,4,5,6
+
+%in% checks if the value is in that list
+
+So this means:
+
+If the day is Monday–Friday → label it "Weekday"
+
+⚠️ Note: The comment in your code says:
+
+# If it is Sunday (1) or Saturday (7)
+
+
+But that comment is incorrect.
+
+2:6 is Monday to Friday — not Sunday or Saturday.
+
+🔹 Step 9: Default condition
+TRUE ~ "Weekend"
+
+
+If none of the above conditions were true:
+
+➡ It must be Saturday or Sunday
+➡ So label it "Weekend"
+
+Why use TRUE?
+
+Because TRUE will always match — it's the fallback.
+
+🔹 Step 10: Final Result
+vic_elec_day_type
+
+
+This just prints the new dataset so you can see the result.
+
+🔹 What the Final Dataset Contains
+
+Now vic_elec_day_type:
+
+Only contains data from 2014
+
+Has a new column called Day_Type
+
+Each row is labeled as:
+
+"Holiday"
+
+"Weekday"
+
+"Weekend"
+
+🔹 Full Logic in Plain English
+
+Load electricity data.
+
+Keep only year 2014.
+
+Add a new column called Day_Type.
+
+If it's a holiday → label it Holiday.
+
+Else if it's Monday–Friday → label it Weekday.
+
+Otherwise → label it Weekend.
+
+Print the dataset.
+
+🔹 How You Could Write This From Scratch
+
+Here’s a simplified mental template you can reuse:
+
+data |> 
+  filter(condition) |> 
+  mutate(
+    new_column = case_when(
+      condition1 ~ "label1",
+      condition2 ~ "label2",
+      TRUE ~ "default_label"
+    )
+  )
+  
+  🔹 Small Improvement Suggestion
+
+To avoid confusion, you could rewrite the comments like this:
+
+wday(Date) %in% 2:6 ~ "Weekday", # Monday to Friday
+TRUE ~ "Weekend"                 # Saturday or Sunday
+
+🔹 Practice Exercise (So You Learn to Write It Yourself)
+
+Try modifying it to:
+
+Create "Monday" as its own category
+
+Everything else as "Other"
+
+Hint:
+
+mutate(
+  Day_Type = case_when(
+    wday(Date) == 2 ~ "Monday",
+    TRUE ~ "Other"
+  )
+)
+
 
 ```{r}
 library(fpp3)

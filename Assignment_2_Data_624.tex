@@ -1,0 +1,1874 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Assignment\_2\_Data\_624},
+  pdfauthor={Mubashira Qari},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Assignment\_2\_Data\_624}
+\author{Mubashira Qari}
+\date{2026-02-14}
+
+\begin{document}
+\maketitle
+
+\subsubsection{3.1 Consider the GDP information in global\_economy. Plot
+the GDP per capita for each country over time. Which country has the
+highest GDP per capita? How has this changed over
+time?}\label{consider-the-gdp-information-in-global_economy.-plot-the-gdp-per-capita-for-each-country-over-time.-which-country-has-the-highest-gdp-per-capita-how-has-this-changed-over-time}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Registered S3 method overwritten by 'tsibble':
+##   method               from 
+##   as_tibble.grouped_df dplyr
+\end{verbatim}
+
+\begin{verbatim}
+## -- Attaching packages -------------------------------------------- fpp3 1.0.2 --
+\end{verbatim}
+
+\begin{verbatim}
+## v tibble      3.2.1     v tsibble     1.1.6
+## v dplyr       1.1.4     v tsibbledata 0.4.1
+## v tidyr       1.3.1     v feasts      0.4.2
+## v lubridate   1.9.4     v fable       0.5.0
+## v ggplot2     4.0.0
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'dplyr' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'lubridate' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'tsibble' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'tsibbledata' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{verbatim}
+## -- Conflicts ------------------------------------------------- fpp3_conflicts --
+## x lubridate::date()    masks base::date()
+## x dplyr::filter()      masks stats::filter()
+## x tsibble::intersect() masks base::intersect()
+## x tsibble::interval()  masks lubridate::interval()
+## x dplyr::lag()         masks stats::lag()
+## x tsibble::setdiff()   masks base::setdiff()
+## x tsibble::union()     masks base::union()
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# global\_economy}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Calculate GDP per capita and plot for each
+country}\label{calculate-gdp-per-capita-and-plot-for-each-country}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+
+\NormalTok{global\_economy }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{GDP\_per\_capita =}\NormalTok{ GDP }\SpecialCharTok{/}\NormalTok{ Population) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(GDP\_per\_capita, }\AttributeTok{show.legend =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"GDP per capita for each country over time"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"$US (Current)"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Removed 3242 rows containing missing values or values outside the scale range
+## (`geom_line()`).
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-2-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\NormalTok{gdp\_data }\OtherTok{\textless{}{-}}\NormalTok{ global\_economy }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{GDP\_per\_capita =}\NormalTok{ GDP }\SpecialCharTok{/}\NormalTok{ Population) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(GDP\_per\_capita))}
+
+\CommentTok{\# gdp\_data}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gdp\_data }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{group\_by}\NormalTok{(Country) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{max\_gdp\_pc =} \FunctionTok{max}\NormalTok{(GDP\_per\_capita)) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{slice\_max}\NormalTok{(max\_gdp\_pc, }\AttributeTok{n =} \DecValTok{5}\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{arrange}\NormalTok{(}\FunctionTok{desc}\NormalTok{(Year))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Current temporal ordering may yield unexpected results.
+## i Suggest to sort by `Country`, `Year` first.
+## Current temporal ordering may yield unexpected results.
+## i Suggest to sort by `Country`, `Year` first.
+\end{verbatim}
+
+\begin{verbatim}
+## # A tsibble: 5 x 3 [1Y]
+## # Key:       Country [2]
+##   Country        Year max_gdp_pc
+##   <fct>         <dbl>      <dbl>
+## 1 Monaco         2014    185153.
+## 2 Liechtenstein  2014    179308.
+## 3 Liechtenstein  2013    173528.
+## 4 Monaco         2013    172589.
+## 5 Monaco         2008    180640.
+\end{verbatim}
+
+Monaco had the highest GDP per capita in the dataset. The maximum value
+was 185,152.5. This occurred in 2014.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{max\_gdp }\OtherTok{\textless{}{-}}\NormalTok{ gdp\_data }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{group\_by}\NormalTok{(Country) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{max\_gdp\_pc =} \FunctionTok{max}\NormalTok{(GDP\_per\_capita)) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{arrange}\NormalTok{(}\FunctionTok{desc}\NormalTok{(max\_gdp\_pc))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Current temporal ordering may yield unexpected results.
+## i Suggest to sort by `Country`, `Year` first.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# max\_gdp}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\CommentTok{\# alculate GDP per capita while maintaining tsibble structure}
+\NormalTok{gdp\_data }\OtherTok{\textless{}{-}}\NormalTok{ global\_economy }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{GDP\_per\_capita =}\NormalTok{ GDP }\SpecialCharTok{/}\NormalTok{ Population) }\SpecialCharTok{|\textgreater{}}
+  \CommentTok{\# Drop rows with missing values to keep the analysis clean}
+  \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(GDP\_per\_capita))}
+
+\CommentTok{\# Find the year with the maximum GDP per capita for each country}
+\CommentTok{\# When using slice\_max on a tsibble, it respects the Key (Country)}
+\NormalTok{max\_gdp }\OtherTok{\textless{}{-}}\NormalTok{ gdp\_data }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{group\_by}\NormalTok{(Country) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{slice\_max}\NormalTok{(GDP\_per\_capita, }\AttributeTok{n =} \DecValTok{1}\NormalTok{, }\AttributeTok{with\_ties =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{ungroup}\NormalTok{() }\SpecialCharTok{|\textgreater{}}
+  \CommentTok{\# Select relevant columns}
+  \FunctionTok{select}\NormalTok{(Country, Year, GDP\_per\_capita, Population) }\SpecialCharTok{|\textgreater{}}
+  \CommentTok{\# Arrange by the highest values globally}
+  \FunctionTok{arrange}\NormalTok{(}\FunctionTok{desc}\NormalTok{(GDP\_per\_capita))}
+
+\CommentTok{\# View the result (this will return a tsibble)}
+\CommentTok{\#print(max\_gdp)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\FunctionTok{library}\NormalTok{(dplyr)}
+\FunctionTok{library}\NormalTok{(scales)}
+
+\CommentTok{\# Top 20 countries by max GDP per capita}
+\NormalTok{top20\_gdp }\OtherTok{\textless{}{-}}\NormalTok{ max\_gdp }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{slice\_max}\NormalTok{(GDP\_per\_capita, }\AttributeTok{n =} \DecValTok{20}\NormalTok{)}
+
+\CommentTok{\# Reduce bar length by dividing GDP per capita by 1000 (show in thousands)}
+\FunctionTok{ggplot}\NormalTok{(top20\_gdp, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =} \FunctionTok{reorder}\NormalTok{(Country, GDP\_per\_capita), }\AttributeTok{y =}\NormalTok{ GDP\_per\_capita}\SpecialCharTok{/}\DecValTok{1000}\NormalTok{, }\AttributeTok{fill =}\NormalTok{ GDP\_per\_capita)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_col}\NormalTok{(}\AttributeTok{width =} \FloatTok{0.7}\NormalTok{) }\SpecialCharTok{+}  \CommentTok{\# slightly thinner bars}
+  \FunctionTok{geom\_text}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{label =}\NormalTok{ scales}\SpecialCharTok{::}\FunctionTok{comma}\NormalTok{(Population)), }\AttributeTok{hjust =} \SpecialCharTok{{-}}\FloatTok{0.1}\NormalTok{, }\AttributeTok{size =} \DecValTok{3}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_flip}\NormalTok{(}\AttributeTok{clip =} \StringTok{"off"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_gradient}\NormalTok{(}\AttributeTok{low =} \StringTok{"lightblue"}\NormalTok{, }\AttributeTok{high =} \StringTok{"darkblue"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Top 20 Countries by Maximum GDP per Capita"}\NormalTok{,}
+    \AttributeTok{subtitle =} \StringTok{"GDP per capita shown in thousands; population next to bars"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Country"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Maximum GDP per Capita (Thousands)"}\NormalTok{,}
+    \AttributeTok{fill =} \StringTok{"GDP per Capita"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}
+    \AttributeTok{plot.margin =} \FunctionTok{margin}\NormalTok{(}\DecValTok{10}\NormalTok{, }\DecValTok{50}\NormalTok{, }\DecValTok{10}\NormalTok{, }\DecValTok{10}\NormalTok{)}
+\NormalTok{  )}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-7-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(dplyr)}
+\NormalTok{monaco\_top\_years }\OtherTok{\textless{}{-}}\NormalTok{ top20\_gdp }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{filter}\NormalTok{(Country }\SpecialCharTok{==} \StringTok{"Monaco"}\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{arrange}\NormalTok{(}\FunctionTok{desc}\NormalTok{(GDP\_per\_capita))}
+  
+\NormalTok{monaco\_top\_years}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tsibble: 1 x 4 [1Y]
+## # Key:       Country [1]
+##   Country  Year GDP_per_capita Population
+##   <fct>   <dbl>          <dbl>      <dbl>
+## 1 Monaco   2014        185153.      38132
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Separate Monaco}
+\NormalTok{monaco\_data }\OtherTok{\textless{}{-}}\NormalTok{ gdp\_data }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{filter}\NormalTok{(Country }\SpecialCharTok{==} \StringTok{"Monaco"}\NormalTok{)}
+
+\CommentTok{\# Plot all countries faint + Monaco highlighted}
+\FunctionTok{ggplot}\NormalTok{(gdp\_data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Year, }\AttributeTok{y =}\NormalTok{ GDP\_per\_capita, }\AttributeTok{group =}\NormalTok{ Country)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{color =} \StringTok{"gray"}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.3}\NormalTok{) }\SpecialCharTok{+}  \CommentTok{\# all countries faint}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{data =}\NormalTok{ monaco\_data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Year, }\AttributeTok{y =}\NormalTok{ GDP\_per\_capita, }\AttributeTok{color =} \StringTok{"Monaco"}\NormalTok{), }\AttributeTok{size =} \FloatTok{1.0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data =}\NormalTok{ top20\_gdp, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Year, }\AttributeTok{y =}\NormalTok{ GDP\_per\_capita, }\AttributeTok{color =}\NormalTok{ Country), }\AttributeTok{size =} \DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \CommentTok{\# top country each year}
+  \FunctionTok{scale\_color\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"Monaco"} \OtherTok{=} \StringTok{"red"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"GDP per Capita Over Time (Monaco Highlighted)"}\NormalTok{,}
+    \AttributeTok{subtitle =} \StringTok{"Red line shows Monaco; points show top country each year"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Year"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"GDP per Capita"}\NormalTok{,}
+    \AttributeTok{color =} \StringTok{""}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+## i Please use `linewidth` instead.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+## generated.
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-9-1.pdf}}
+\#\#\# How has this changed over time?
+
+After 1980s:
+
+Monaco consistently becomes the top country in GDP per capita.
+
+Reasons:
+
+Tiny population (38--39k people)
+
+High-income economy: banking, tourism, luxury goods, and real estate
+
+Continuous per-person economic growth
+
+Effect:
+
+Because Monaco's GDP is divided among small population, its GDP per
+capita is extremely high, far surpassing larger countries like the USA
+or Canada.
+
+This shows that Monaco becoming the richest per person happened
+gradually over time, not as a one-off event.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\CommentTok{\# Calculate GDP per capita and the \% Change Rate}
+\NormalTok{gdp\_with\_growth }\OtherTok{\textless{}{-}}\NormalTok{ global\_economy }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{GDP\_per\_capita =}\NormalTok{ GDP }\SpecialCharTok{/}\NormalTok{ Population) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{group\_by}\NormalTok{(Country) }\SpecialCharTok{|\textgreater{}}
+  \CommentTok{\# difference() calculates (Year\_t {-} Year\_t{-}1)}
+  \CommentTok{\# We divide by the previous year and multiply by 100 for percentage}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pct\_change =}\NormalTok{ (}\FunctionTok{difference}\NormalTok{(GDP\_per\_capita) }\SpecialCharTok{/} \FunctionTok{lag}\NormalTok{(GDP\_per\_capita)) }\SpecialCharTok{*} \DecValTok{100}\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{ungroup}\NormalTok{()}
+
+\CommentTok{\# Find the top 5 countries by max GDP per capita and show their growth rate}
+\NormalTok{top5\_max\_gdp }\OtherTok{\textless{}{-}}\NormalTok{ gdp\_with\_growth }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{group\_by}\NormalTok{(Country) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{slice\_max}\NormalTok{(GDP\_per\_capita, }\AttributeTok{n =} \DecValTok{1}\NormalTok{, }\AttributeTok{with\_ties =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{ungroup}\NormalTok{() }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{slice\_max}\NormalTok{(GDP\_per\_capita, }\AttributeTok{n =} \DecValTok{10}\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+  \CommentTok{\# Select relevant columns including the new growth rate}
+  \FunctionTok{select}\NormalTok{(Country, Year, Population, GDP\_per\_capita, pct\_change) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{arrange}\NormalTok{(}\FunctionTok{desc}\NormalTok{(Year))}
+
+\CommentTok{\# View the result}
+\FunctionTok{print}\NormalTok{(top5\_max\_gdp)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tsibble: 10 x 5 [1Y]
+## # Key:       Country [10]
+##    Country           Year Population GDP_per_capita pct_change
+##    <fct>            <dbl>      <dbl>          <dbl>      <dbl>
+##  1 Monaco            2014      38132        185153.       7.28
+##  2 Liechtenstein     2014      37127        179308.       3.33
+##  3 Luxembourg        2014     556319        119225.       4.93
+##  4 Macao SAR, China  2014     588781         94004.       5.00
+##  5 Isle of Man       2014      82590         89942.       9.21
+##  6 Norway            2013    5079623        103059.       1.37
+##  7 Qatar             2012    2109568         88565.       3.04
+##  8 Switzerland       2011    7912398         88416.      18.5 
+##  9 Bermuda           2008      65273         93606.       3.03
+## 10 San Marino        2008      30351         90683.       9.24
+\end{verbatim}
+
+\subsubsection{3.2 For each of the following series, make a graph of the
+data. If transforming seems appropriate, do so and describe the
+effect.}\label{for-each-of-the-following-series-make-a-graph-of-the-data.-if-transforming-seems-appropriate-do-so-and-describe-the-effect.}
+
+United States GDP from global\_economy. Slaughter of Victorian ``Bulls,
+bullocks and steers'' in aus\_livestock. Victorian Electricity Demand
+from vic\_elec. Gas production from aus\_production.
+
+\subsubsection{a. United States GDP from
+global\_economy}\label{a.-united-states-gdp-from-global_economy}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Load libraries and filter data }
+
+\FunctionTok{library}\NormalTok{(fpp3) }
+\FunctionTok{library}\NormalTok{(dplyr)}
+\FunctionTok{library}\NormalTok{(ggplot2)}
+
+\CommentTok{\# Filter for United States}
+\NormalTok{us\_gdp }\OtherTok{\textless{}{-}}\NormalTok{ global\_economy }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{filter}\NormalTok{(Country }\SpecialCharTok{==} \StringTok{"United States"}\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{select}\NormalTok{(Year, GDP)}
+
+\CommentTok{\#us\_gdp}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Plotting raw GDP . Since we want the total economic
+output of the US, so we focus on raw GDP and not per
+capita}\label{plotting-raw-gdp-.-since-we-want-the-total-economic-output-of-the-us-so-we-focus-on-raw-gdp-and-not-per-capita}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(us\_gdp, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Year, }\AttributeTok{y =}\NormalTok{ GDP)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{color =} \StringTok{"steelblue"}\NormalTok{, }\AttributeTok{size =} \DecValTok{1}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"United States GDP Over Time"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Year"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"GDP (US Dollars)"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-12-1.pdf}}
+\#\#\# Interpretation
+
+GDP is increasing over time, but the growth is exponential.
+
+Early years look ``flat'' because GDP values in the 1900s are tiny
+compared to recent years.
+
+\subsubsection{Transform GDP (log
+transformation)}\label{transform-gdp-log-transformation}
+
+A log transformation is often appropriate for economic data that grows
+exponentially.
+
+This helps make the growth more linear
+
+Easier to see relative changes over time
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Remove heterogeneity so you fit more simple model}
+
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\NormalTok{us\_gdp }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{autoplot}\NormalTok{(}\FunctionTok{log}\NormalTok{(GDP), }\AttributeTok{colour =} \StringTok{"darkred"}\NormalTok{ , }\AttributeTok{size =} \FloatTok{1.2}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{y =} \StringTok{"Log GDP"}\NormalTok{,}
+    \AttributeTok{title =} \StringTok{"United States GDP Over Time (Log Scale)"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-13-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\FunctionTok{library}\NormalTok{(dplyr)}
+
+\CommentTok{\# US GDP data}
+\NormalTok{us\_gdp }\OtherTok{\textless{}{-}}\NormalTok{ global\_economy }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{filter}\NormalTok{(Country }\SpecialCharTok{==} \StringTok{"United States"}\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{select}\NormalTok{(Year, GDP)}
+
+\CommentTok{\# Define some major recession years}
+\NormalTok{recessions }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+  \AttributeTok{Year =} \FunctionTok{c}\NormalTok{(}\DecValTok{1929}\NormalTok{, }\DecValTok{1933}\NormalTok{, }\DecValTok{1974}\NormalTok{, }\DecValTok{1982}\NormalTok{, }\DecValTok{2008}\NormalTok{),}
+  \AttributeTok{Label =} \FunctionTok{c}\NormalTok{(}\StringTok{"Great Depression"}\NormalTok{, }\StringTok{"End Depression"}\NormalTok{, }\StringTok{"1973 Oil Crisis"}\NormalTok{, }\StringTok{"Early 80s Recession"}\NormalTok{, }\StringTok{"2008 Financial Crisis"}\NormalTok{)}
+\NormalTok{)}
+
+\CommentTok{\# Plot log GDP with thick line, highlight recessions}
+\NormalTok{us\_gdp }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(}\FunctionTok{log}\NormalTok{(GDP), }\AttributeTok{colour =} \StringTok{"darkgreen"}\NormalTok{, }\AttributeTok{size =} \FloatTok{1.2}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data =}\NormalTok{ recessions, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Year, }\AttributeTok{y =} \FunctionTok{log}\NormalTok{(us\_gdp}\SpecialCharTok{$}\NormalTok{GDP[}\FunctionTok{match}\NormalTok{(Year, us\_gdp}\SpecialCharTok{$}\NormalTok{Year)])), }
+             \AttributeTok{colour =} \StringTok{"red"}\NormalTok{, }\AttributeTok{size =} \DecValTok{3}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_text}\NormalTok{(}\AttributeTok{data =}\NormalTok{ recessions, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Year, }\AttributeTok{y =} \FunctionTok{log}\NormalTok{(us\_gdp}\SpecialCharTok{$}\NormalTok{GDP[}\FunctionTok{match}\NormalTok{(Year, us\_gdp}\SpecialCharTok{$}\NormalTok{Year)]), }\AttributeTok{label =}\NormalTok{ Label),}
+            \AttributeTok{vjust =} \SpecialCharTok{{-}}\DecValTok{1}\NormalTok{, }\AttributeTok{hjust =} \FloatTok{0.5}\NormalTok{, }\AttributeTok{size =} \FloatTok{3.5}\NormalTok{, }\AttributeTok{colour =} \StringTok{"red"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{y =} \StringTok{"Log GDP"}\NormalTok{,}
+    \AttributeTok{title =} \StringTok{"United States GDP Over Time (Log Scale) with Major Recessions Highlighted"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Removed 2 rows containing missing values or values outside the scale range
+## (`geom_point()`).
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 2 rows containing missing values or values outside the scale range
+## (`geom_text()`).
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-14-1.pdf}}
+\#\#\# b. Slaughter of Victorian ``Bulls, bullocks and steers'' in
+aus\_livestock.
+
+\subsubsection{Loading data and filtering for
+Victoria}\label{loading-data-and-filtering-for-victoria}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+\FunctionTok{library}\NormalTok{(dplyr)}
+\FunctionTok{library}\NormalTok{(ggplot2)}
+
+\CommentTok{\# view(aus\_livestock)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+\FunctionTok{library}\NormalTok{(dplyr)}
+
+\CommentTok{\# Filter for Victoria and the "Bulls, bullocks and steers" series}
+\NormalTok{vic\_bulls }\OtherTok{\textless{}{-}}\NormalTok{ aus\_livestock }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{filter}\NormalTok{(State }\SpecialCharTok{==} \StringTok{"Victoria"}\NormalTok{, }
+\NormalTok{         Animal }\SpecialCharTok{==} \StringTok{"Bulls, bullocks and steers"}\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Slaughter\_Count =}\NormalTok{ Count) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{select}\NormalTok{(Month, Slaughter\_Count)}
+
+\CommentTok{\# vic\_bulls}
+\end{Highlighting}
+\end{Shaded}
+
+Before we apply any decomposition it is good to see the data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{vic\_bulls }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{autoplot}\NormalTok{(Slaughter\_Count, }\AttributeTok{colour =} \StringTok{"steelblue"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.7}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Slaughter of Bulls, Bullocks and Steers in Victoria"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Number Slaughtered"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Year"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-17-1.pdf}}
+\#\#\# Analysis of Time Series Components:
+
+Trend: A clear long-term decrease is visible as the data transitions
+from higher volumes in the late 1970s to a lower baseline by 2010.
+
+Seasonality: The consistent, jagged teeth appearing at annual intervals
+represent fluctuations tied to the calendar year, such as weather or
+other patterns.
+
+Cycle: The broader, multi-year waves---specifically the peaks around
+1998 and 2015---indicate cyclical behavior often associated with
+economic or livestock-specific cycles that do not follow a fixed
+calendar.
+
+Determining the Need for Transformation A transformation (like Box-Cox)
+is appropriate when the variance of the series increases or decreases in
+proportion to its level.In this specific series, the seasonal
+fluctuations appear relatively stable in magnitude throughout the
+timeline, despite the downward trend. However, to confirm if a
+transformation is statistically beneficial, we can use the Guerrero
+method to find the optimal lambda.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Calculate optimal lambda}
+\NormalTok{optimal\_lambda }\OtherTok{\textless{}{-}}\NormalTok{ vic\_bulls }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{features}\NormalTok{(Slaughter\_Count, }\AttributeTok{features =}\NormalTok{ guerrero) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pull}\NormalTok{(lambda\_guerrero)}
+\NormalTok{optimal\_lambda}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] -0.04461887
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Apply transformation}
+\NormalTok{vic\_bulls }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(}\FunctionTok{box\_cox}\NormalTok{(Slaughter\_Count, optimal\_lambda)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Transformed Victoria Bulls Slaughter"}\NormalTok{,}
+       \AttributeTok{subtitle =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Box{-}Cox transformation with lambda ="}\NormalTok{, }\FunctionTok{round}\NormalTok{(optimal\_lambda, }\DecValTok{3}\NormalTok{)),}
+       \AttributeTok{y =} \StringTok{"Transformed Units"}\NormalTok{) }
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-18-1.pdf}}
+\#\#\# The specific effects of applying this lambda to your vic\_bulls
+data include:
+
+Variance Stabilization: The vertical magnitude of the seasonal
+fluctuations is equalized across the timeline. This ensures that the
+seasonal ``swings'' in the high-volume 1970s are mathematically
+comparable to the swings in the lower-volume 2010s.
+
+Linearization of Trends: By compressing the scale, the transformation
+can help linearize growth or decline patterns, making them easier for
+models like STL or ETS to interpret.
+
+Outlier Dampening: Any extreme, one-off spikes in slaughter counts are
+pulled closer to the mean level, preventing individual months from
+having a disproportionate impact on the long-term trend estimate.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Apply the specific lambda calculated via Guerrero}
+\NormalTok{final\_lambda }\OtherTok{\textless{}{-}} \SpecialCharTok{{-}}\FloatTok{0.04461887}
+
+\NormalTok{vic\_bulls }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(}\FunctionTok{box\_cox}\NormalTok{(Slaughter\_Count, final\_lambda)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Transformed Victoria Bulls Slaughter Count"}\NormalTok{,}
+    \AttributeTok{subtitle =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Box{-}Cox transformation applied with lambda ="}\NormalTok{, }\FunctionTok{round}\NormalTok{(final\_lambda, }\DecValTok{4}\NormalTok{)),}
+    \AttributeTok{y =} \StringTok{"Transformed Units"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-19-1.pdf}}
+
+By stabilizing the variance first, we ensure that a subsequent STL
+decomposition will produce a reliable and clean ``remainder'' component,
+which is essential for accurate forecasting.
+
+\subsubsection{Victorian Electricity Demand from vic\_elec.
+dataset}\label{victorian-electricity-demand-from-vic_elec.-dataset}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+\FunctionTok{library}\NormalTok{(dplyr)}
+
+\CommentTok{\# Inspect the vic\_elec dataset}
+\CommentTok{\# head(vic\_elec)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Prepare the data}\label{prepare-the-data}
+
+To focus on daily electricity demand, we aggregate by day which is
+easier to visualize than half-hourly data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{vic\_elec\_daily }\OtherTok{\textless{}{-}}\NormalTok{ vic\_elec }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{index\_by}\NormalTok{(}\AttributeTok{Date =} \FunctionTok{date}\NormalTok{(Time)) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{Daily\_Demand =} \FunctionTok{sum}\NormalTok{(Demand, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{))}
+
+\CommentTok{\# vic\_elec\_daily}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Autoplot the raw series}\label{autoplot-the-raw-series}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{vic\_elec\_daily }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(Daily\_Demand, }\AttributeTok{colour =} \StringTok{"orange"}\NormalTok{, }\AttributeTok{size =} \FloatTok{1.0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Daily Electricity Demand in Victoria"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Daily Demand (MW)"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Date"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-22-1.pdf}}
+
+Calculating the Optimal Lambda (lambda) Using the Guerrero method on the
+aggregated Daily\_Demand column ensures the transformation is
+mathematically optimized to stabilize the variance across the entire
+1,096-row series.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\CommentTok{\# Calculate the optimal lambda for Daily\_Demand}
+\NormalTok{daily\_lambda }\OtherTok{\textless{}{-}}\NormalTok{ vic\_elec\_daily }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{features}\NormalTok{(Daily\_Demand, }\AttributeTok{features =}\NormalTok{ guerrero) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pull}\NormalTok{(lambda\_guerrero)}
+
+\CommentTok{\# Display the result}
+\NormalTok{daily\_lambda}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] -0.8999268
+\end{verbatim}
+
+A value of -0.9 suggests that the variance in your Daily\_Demand
+increases extremely sharply as the level of demand rises.
+
+\subsubsection{Apply the Transformation}\label{apply-the-transformation}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\CommentTok{\# Applying the specific lambda value discovered}
+\NormalTok{lambda\_val }\OtherTok{\textless{}{-}} \SpecialCharTok{{-}}\FloatTok{0.8999268}
+
+\NormalTok{vic\_elec\_daily }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(}\FunctionTok{box\_cox}\NormalTok{(Daily\_Demand, lambda\_val)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Transformed Daily Electricity Demand"}\NormalTok{,}
+    \AttributeTok{subtitle =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Applied Box{-}Cox transformation with lambda ="}\NormalTok{, }\FunctionTok{round}\NormalTok{(lambda\_val, }\DecValTok{4}\NormalTok{)),}
+    \AttributeTok{y =} \StringTok{"Transformed Units"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-24-1.pdf}}
+If we compare the raw data to the transformed data, we will notice the
+stabilization effect:
+
+In the original orange chart, the massive spike in early 2014 towers
+over everything else. In the black transformed chart, that same spike is
+``pulled back'' and is much closer in height to the other seasonal
+peaks.
+
+Look at the troughs (the low points). In the raw data, the gaps between
+the high and low points vary significantly throughout the year. In the
+transformed version, these vertical swings become more uniform in
+length.
+
+The goal of this transformation wasn't to change the shape of the
+series, but to prepare it for STL Decomposition.
+
+\subsubsection{Inspect the data}\label{inspect-the-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+\FunctionTok{library}\NormalTok{(dplyr)}
+
+\FunctionTok{head}\NormalTok{(aus\_production)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tsibble: 6 x 7 [1Q]
+##   Quarter  Beer Tobacco Bricks Cement Electricity   Gas
+##     <qtr> <dbl>   <dbl>  <dbl>  <dbl>       <dbl> <dbl>
+## 1 1956 Q1   284    5225    189    465        3923     5
+## 2 1956 Q2   213    5178    204    532        4436     6
+## 3 1956 Q3   227    5297    208    561        4806     7
+## 4 1956 Q4   308    5681    197    570        4418     6
+## 5 1957 Q1   262    5577    187    529        4339     5
+## 6 1957 Q2   228    5651    214    604        4811     7
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gas\_production }\OtherTok{\textless{}{-}}\NormalTok{ aus\_production }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{select}\NormalTok{(Quarter, Gas)}
+\NormalTok{gas\_production}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tsibble: 218 x 2 [1Q]
+##    Quarter   Gas
+##      <qtr> <dbl>
+##  1 1956 Q1     5
+##  2 1956 Q2     6
+##  3 1956 Q3     7
+##  4 1956 Q4     6
+##  5 1957 Q1     5
+##  6 1957 Q2     7
+##  7 1957 Q3     7
+##  8 1957 Q4     6
+##  9 1958 Q1     5
+## 10 1958 Q2     7
+## # i 208 more rows
+\end{verbatim}
+
+\subsubsection{Plot the raw data series}\label{plot-the-raw-data-series}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gas\_production }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(Gas, }\AttributeTok{colour =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{size =} \FloatTok{1.0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Australian Gas Production"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Gas Production"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Quarter"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-27-1.pdf}}
+For the Australian Gas Production series, the transformation is highly
+appropriate because the plot clearly shows increasing seasonal variation
+as the production level rises.
+
+\subsubsection{Analysis of the Graph}\label{analysis-of-the-graph}
+
+Trend: There is a strong, long-term upward trend starting around 1970.
+
+Seasonality: A very strong quarterly seasonal pattern is evident.
+
+Increasing Variance: Notice that the ``height'' of the seasonal zig-zags
+in the 2000s is much larger than it was in the 1970s. This is known as
+multiplicative seasonality and indicates that a transformation is needed
+to stabilize the variance.
+
+Description of the Effect Applying this transformation to the gas data
+would have the following effects:
+
+Variance Stabilization: The vertical magnitude of the seasonal
+fluctuations will be equalized. The spikes at the end of the series will
+appear the same size as those at the beginning.
+
+Linearization: The exponential-looking growth curve will be dampened
+into a more linear trend, making it easier for models like STL or ETS to
+handle.
+
+Balanced Residuals: It ensures that when you eventually forecast, the
+prediction intervals aren't inappropriately small for high-production
+periods.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Calculate optimal lambda for Gas}
+\NormalTok{gas\_lambda }\OtherTok{\textless{}{-}}\NormalTok{ gas\_production }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{features}\NormalTok{(Gas, }\AttributeTok{features =}\NormalTok{ guerrero) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pull}\NormalTok{(lambda\_guerrero)}
+
+\CommentTok{\# Plot the transformed series}
+\NormalTok{gas\_production }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(}\FunctionTok{box\_cox}\NormalTok{(Gas, gas\_lambda)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Transformed Australian Gas Production"}\NormalTok{,}
+       \AttributeTok{subtitle =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Box{-}Cox transformation with lambda ="}\NormalTok{, }\FunctionTok{round}\NormalTok{(gas\_lambda, }\DecValTok{3}\NormalTok{)),}
+       \AttributeTok{y =} \StringTok{"Transformed Units"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-28-1.pdf}}
+\#\#\# 3.3 Why is a Box-Cox transformation unhelpful for the
+canadian\_gas data?
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# canadian\_gas}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\NormalTok{canadian\_gas }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(Volume, }\AttributeTok{colour =} \StringTok{"steelblue"}\NormalTok{, }\AttributeTok{size =} \FloatTok{1.0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Canadian Gas Production"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Gas Volume"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Month"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-30-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+\FunctionTok{library}\NormalTok{(dplyr)}
+
+\CommentTok{\# Step 1: Calculate optimal Box{-}Cox lambda for Gas}
+\NormalTok{lambda\_gas }\OtherTok{\textless{}{-}}\NormalTok{ canadian\_gas }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{features}\NormalTok{(Volume, }\AttributeTok{features =}\NormalTok{ guerrero) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pull}\NormalTok{(lambda\_guerrero)}
+
+\CommentTok{\# Step 2: Apply Box{-}Cox transformation and plot using the word "lambda"}
+\NormalTok{canadian\_gas }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(}\FunctionTok{box\_cox}\NormalTok{(Volume, lambda\_gas)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{y =} \StringTok{"Transformed Gas Production"}\NormalTok{,}
+    \AttributeTok{title =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Box{-}Cox Transformed Gas Production with lambda ="}\NormalTok{, }
+                  \FunctionTok{round}\NormalTok{(lambda\_gas, }\DecValTok{2}\NormalTok{))}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-31-1.pdf}}
+\#\#\# Explanation:
+
+A Box-Cox transformation is unhelpful for the canadian\_gas data because
+the variance in the series does not change proportionally with the level
+of the data.
+
+Specifically, the seasonal fluctuations do not grow or shrink in a
+consistent way as the trend increases.
+
+Why the Transformation Fails for This Series
+
+Non-Proportional Variance: In the initial ``Canadian Gas Production''
+chart, notice that between 1975 and 1990, the seasonal swings are quite
+large, but as the production level continues to rise after 1990, the
+swings actually become smaller and more compressed.
+
+Contradicting the Transformation's Purpose: A Box-Cox transformation
+(like your result with lambda = 0.58) is designed to fix cases where
+seasonal variation increases as the level increases (multiplicative
+seasonality). Because the data shows large swings in the middle and
+smaller swings at the end, the transformation cannot ``even them out''
+across the entire timeline.
+
+Resulting Visual Distortion: If we look at the ``Box-Cox Transformed''
+chart, we can see the transformation didn't stabilize the variance; it
+simply compressed the entire y-axis without making the seasonal zig-zags
+look uniform.
+
+\subsubsection{3.4 What Box-Cox transformation would you select for your
+retail data (from Exercise 7 in Section
+2.10)?}\label{what-box-cox-transformation-would-you-select-for-your-retail-data-from-exercise-7-in-section-2.10}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{12345678}\NormalTok{)}
+\NormalTok{myseries }\OtherTok{\textless{}{-}}\NormalTok{ aus\_retail }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{filter}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{Series ID}\StringTok{\textasciigrave{}} \SpecialCharTok{==} \FunctionTok{sample}\NormalTok{(aus\_retail}\SpecialCharTok{$}\StringTok{\textasciigrave{}}\AttributeTok{Series ID}\StringTok{\textasciigrave{}}\NormalTok{,}\DecValTok{1}\NormalTok{))}
+
+\CommentTok{\# myseries}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Plot the rew series}\label{plot-the-rew-series}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\NormalTok{myseries }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(Turnover, }\AttributeTok{colour =} \StringTok{"steelblue"}\NormalTok{, }\AttributeTok{size =} \FloatTok{1.0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Retail Turnover"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Turnover"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Month"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-33-1.pdf}}
+\#\#\# Retail turnover shows:
+
+Strong upward trend
+
+Seasonal fluctuations that increase as the level increases
+
+Variance growing over time
+
+This suggests multiplicative seasonality, meaning a transformation is
+likely needed.
+
+\subsubsection{Estimate the Box-Cox λ (Guerrero
+method)}\label{estimate-the-box-cox-ux3bb-guerrero-method}
+
+Lambda ≈ 1 → No transformation
+
+Lambda ≈ 0 → Log transformation
+
+0 \textless{} Lambda \textless{} 1 → Power transformation
+
+compute λ using Guerrero's method:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lambda\_retail }\OtherTok{\textless{}{-}}\NormalTok{ myseries }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{features}\NormalTok{(Turnover, }\AttributeTok{features =}\NormalTok{ guerrero) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pull}\NormalTok{(lambda\_guerrero)}
+
+\NormalTok{lambda\_retail}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.08303631
+\end{verbatim}
+
+Using Guerrero's method, the estimated Box-Cox parameter is Lambda =
+0.083.
+
+Since this value is very close to 0, the appropriate transformation is
+approximately a log transformation.
+
+Applying a log transformation helps stabilize the increasing variance
+and seasonal fluctuations in the retail turnover series.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{myseries }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(}\FunctionTok{box\_cox}\NormalTok{(Turnover, lambda\_retail),}
+           \AttributeTok{colour =} \StringTok{"darkgreen"}\NormalTok{, }\AttributeTok{size =} \FloatTok{1.0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Box{-}Cox Transformed Retail Turnover (Lambda ="}\NormalTok{,}
+                  \FunctionTok{round}\NormalTok{(lambda\_retail,}\DecValTok{2}\NormalTok{), }\StringTok{")"}\NormalTok{),}
+    \AttributeTok{y =} \StringTok{"Transformed Turnover"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Month"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-36-1.pdf}}
+
+\subsubsection{3.5 For the following series, find an appropriate Box-Cox
+transformation in order to stabilise the
+variance.}\label{for-the-following-series-find-an-appropriate-box-cox-transformation-in-order-to-stabilise-the-variance.}
+
+Tobacco from aus\_production, Economy class passengers between Melbourne
+and Sydney from ansett, and Pedestrian counts at Southern Cross Station
+from pedestrian.
+
+\subsubsection{a. Tobacco from
+aus\_production}\label{a.-tobacco-from-aus_production}
+
+\subsubsection{Inspect Data}\label{inspect-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+\FunctionTok{library}\NormalTok{(dplyr)}
+
+\CommentTok{\# head(aus\_production)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Plot the original data}\label{plot-the-original-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\NormalTok{aus\_production }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(Tobacco) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Australian Tobacco Production"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Tobacco Production"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Removed 24 rows containing missing values or values outside the scale range
+## (`geom_line()`).
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-38-1.pdf}}
+We look for the following:
+
+Does variability increase over time?
+
+Are seasonal swings getting larger?
+
+Does variance grow with the level?
+
+\subsubsection{From your Tobacco production graph, we
+observe}\label{from-your-tobacco-production-graph-we-observe}
+
+There is strong seasonality with a regular quarterly peaks.
+
+The variance does NOT clearly increase with the level.
+
+In fact, after 1980 the series declines.
+
+The seasonal swings look roughly similar in size across time.
+
+\subsubsection{A Box-Cox transformation is used
+to:}\label{a-box-cox-transformation-is-used-to}
+
+Stabilise increasing variance
+
+Convert multiplicative seasonality into additive
+
+But in this plot:
+
+Seasonal amplitude looks fairly constant.
+
+Variance does not clearly grow with the level.
+
+So a transformation may not be necessary.
+
+\subsubsection{Confirm with Guerrero's
+Method}\label{confirm-with-guerreros-method}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lambda\_tobacco }\OtherTok{\textless{}{-}}\NormalTok{ aus\_production }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{features}\NormalTok{(Tobacco, }\AttributeTok{features =}\NormalTok{ guerrero) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pull}\NormalTok{(lambda\_guerrero)}
+
+\NormalTok{lambda\_tobacco}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.9264636
+\end{verbatim}
+
+Since lambda is 0.926, which is very close to 1, it suggests that data
+doesn't need a strong transformation.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{aus\_production }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(}\FunctionTok{box\_cox}\NormalTok{(Tobacco, lambda\_retail),}
+           \AttributeTok{colour =} \StringTok{"darkgreen"}\NormalTok{, }\AttributeTok{size =} \FloatTok{1.0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Box{-}Cox Transformed AUS Production Tobacco (Lambda ="}\NormalTok{,}
+                  \FunctionTok{round}\NormalTok{(lambda\_retail,}\DecValTok{2}\NormalTok{), }\StringTok{")"}\NormalTok{),}
+    \AttributeTok{y =} \StringTok{"Transformed Tobacco"}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{"Month"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Removed 24 rows containing missing values or values outside the scale range
+## (`geom_line()`).
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-40-1.pdf}}
+\#\#\# b. Box‑Cox Transformation for the Ansett Economy Passengers
+Series
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\CommentTok{\# Filter the series for Economy class passengers on the MEL‑SYD route}
+\NormalTok{economy }\OtherTok{\textless{}{-}}\NormalTok{ ansett }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{filter}\NormalTok{(Airports }\SpecialCharTok{==} \StringTok{"MEL{-}SYD"}\NormalTok{, Class }\SpecialCharTok{==} \StringTok{"Economy"}\NormalTok{)}
+
+\CommentTok{\# economy}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Plot the Original Series}\label{plot-the-original-series}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{autoplot}\NormalTok{(economy, Passengers) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Original Economy Class Passengers (MEL‑SYD)"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Passengers"}\NormalTok{, }\AttributeTok{x =} \StringTok{"Time"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-42-1.pdf}}
+We notices that the variance isn't constant over time, partly due to
+strikes or structural changes in the data which makes a transformation
+potentially helpful
+
+\subsubsection{Estimate the Best Lambda Using Guerrero's
+Method}\label{estimate-the-best-lambda-using-guerreros-method}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lambda\_economy }\OtherTok{\textless{}{-}}\NormalTok{ economy }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{features}\NormalTok{(Passengers, }\AttributeTok{features =}\NormalTok{ guerrero) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pull}\NormalTok{(lambda\_guerrero)}
+
+\NormalTok{lambda\_economy}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1.999927
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lambda }\OtherTok{\textless{}{-}} \FloatTok{1.999927}
+
+\NormalTok{economy}\SpecialCharTok{$}\NormalTok{Passengers\_BoxCox }\OtherTok{\textless{}{-}} \ControlFlowTok{if}\NormalTok{(lambda }\SpecialCharTok{==} \DecValTok{0}\NormalTok{)\{}
+  \FunctionTok{log}\NormalTok{(econ}\SpecialCharTok{$}\NormalTok{Passengers)}
+\NormalTok{\} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{  (economy}\SpecialCharTok{$}\NormalTok{Passengers}\SpecialCharTok{\^{}}\NormalTok{lambda }\SpecialCharTok{{-}} \DecValTok{1}\NormalTok{)}\SpecialCharTok{/}\NormalTok{lambda}
+\NormalTok{\}}
+
+\CommentTok{\# Plot original vs transformed}
+\FunctionTok{plot}\NormalTok{(economy}\SpecialCharTok{$}\NormalTok{Passengers, }\AttributeTok{type=}\StringTok{"o"}\NormalTok{, }\AttributeTok{col=}\StringTok{"blue"}\NormalTok{, }\AttributeTok{ylim=}\FunctionTok{range}\NormalTok{(}\FunctionTok{c}\NormalTok{(economy}\SpecialCharTok{$}\NormalTok{Passengers, economy}\SpecialCharTok{$}\NormalTok{Passengers\_BoxCox)),}
+     \AttributeTok{xlab=}\StringTok{"Time"}\NormalTok{, }\AttributeTok{ylab=}\StringTok{"Passengers"}\NormalTok{, }\AttributeTok{main=}\StringTok{"Original vs Box{-}Cox (Lambda = 2)"}\NormalTok{)}
+\FunctionTok{lines}\NormalTok{(economy}\SpecialCharTok{$}\NormalTok{Passengers\_BoxCox, }\AttributeTok{type=}\StringTok{"o"}\NormalTok{, }\AttributeTok{col=}\StringTok{"red"}\NormalTok{)}
+\FunctionTok{legend}\NormalTok{(}\StringTok{"topleft"}\NormalTok{, }\AttributeTok{legend=}\FunctionTok{c}\NormalTok{(}\StringTok{"Original"}\NormalTok{,}\StringTok{"Box{-}Cox Lambda = 2"}\NormalTok{), }\AttributeTok{col=}\FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{,}\StringTok{"red"}\NormalTok{), }\AttributeTok{lty=}\DecValTok{1}\NormalTok{, }\AttributeTok{pch=}\DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-44-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{economy }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(}\FunctionTok{box\_cox}\NormalTok{(Passengers, lambda))}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-45-1.pdf}}
+
+\subsubsection{c.~Pedestrian counts at Southern Cross Station from
+pedestrian.}\label{c.-pedestrian-counts-at-southern-cross-station-from-pedestrian.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\CommentTok{\# Filter for Southern Cross Station}
+\NormalTok{southern\_cross }\OtherTok{\textless{}{-}}\NormalTok{ pedestrian }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{filter}\NormalTok{(Sensor }\SpecialCharTok{==} \StringTok{"Southern Cross Station"}\NormalTok{) }
+
+\CommentTok{\# southern\_cross}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Visualize the Raw Data}\label{visualize-the-raw-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{southern\_cross }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(Count) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Pedestrian Counts: Southern Cross Station"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Number of Pedestrians"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-47-1.pdf}}
+\#\#\# Determine the Optimal Lambda
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Calculate the optimal lambda}
+\NormalTok{lambda }\OtherTok{\textless{}{-}}\NormalTok{ southern\_cross }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{features}\NormalTok{(Count, }\AttributeTok{features =}\NormalTok{ guerrero) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pull}\NormalTok{(lambda\_guerrero)}
+
+\CommentTok{\# Display the value}
+\NormalTok{lambda}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] -0.2501616
+\end{verbatim}
+
+When lambda is negative, the transformation effectively flips the order
+of the data and larger values become smaller.
+
+However, the box\_cox() function in the fpp3 package automatically
+handles this by scaling the results so that the series maintains its
+original direction increasing values in the raw data remain increasing
+in the transformed data.
+
+\subsubsection{Applying the
+Transformation}\label{applying-the-transformation}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Apply the specific lambda found}
+\NormalTok{southern\_cross }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(}\FunctionTok{box\_cox}\NormalTok{(Count, lambda)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{"Box{-}Cox Transformed: Southern Cross Station"}\NormalTok{,}
+    \AttributeTok{subtitle =} \StringTok{"Lambda = {-}0.25"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Transformed Count"}
+\NormalTok{  )}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-49-1.pdf}}
+Southern Cross Station usually shows strong daily and weekly patterns
+with high peaks during commute hours.
+
+The negative lambda suggests that the variance which is the wiggle in
+the data was increasing very aggressively as the volume of pedestrians
+increased.
+
+This transformation pulls those massive peaks down significantly to make
+the seasonal patterns more uniform.
+
+\subsubsection{3.7 Consider the last five years of the Gas data from
+aus\_production.}\label{consider-the-last-five-years-of-the-gas-data-from-aus_production.}
+
+\subsubsection{gas \textless- tail(aus\_production, 5*4)
+\textbar\textgreater{}
+select(Gas)}\label{gas---tailaus_production-54-selectgas}
+
+\subsubsection{a. Plot the time series. Can you identify seasonal
+fluctuations and/or a
+trend-cycle?}\label{a.-plot-the-time-series.-can-you-identify-seasonal-fluctuations-andor-a-trend-cycle}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Load the necessary library}
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\CommentTok{\# Extract the last 5 years (20 quarters) of Gas data}
+\NormalTok{gas }\OtherTok{\textless{}{-}} \FunctionTok{tail}\NormalTok{(aus\_production, }\DecValTok{5} \SpecialCharTok{*} \DecValTok{4}\NormalTok{) }\SpecialCharTok{|\textgreater{}} 
+  \FunctionTok{select}\NormalTok{(Gas)}
+
+\CommentTok{\# Plot the time series}
+\NormalTok{gas }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(Gas) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Australian Gas Production: Last 5 Years"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Petajoules"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"Quarter"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-50-1.pdf}}
+
+\subsubsection{Analysis of the Series}\label{analysis-of-the-series}
+
+Based on the resulting plot, we can identify the following components:
+
+Trend-Cycle:
+
+There is a clear upward trend over the five-year period. The overall
+level of gas production increases from the beginning of the series to
+the end.
+
+Because the data covers only five years, it is difficult to identify a
+distinct cycle which usually spans several years and is related to
+economic conditions, but the steady increase is the dominant ``trend''
+component.
+
+Seasonal Fluctuations:
+
+There is a very strong and regular seasonal pattern.
+
+Peaks: Gas production consistently peaks in the middle quarters (Q2 and
+Q3). This corresponds to the Australian winter when the demand for
+heating is at its highest.
+
+Troughs: The lowest production levels occur in Quarter 1 (Summer),
+followed by a slight rise in Quarter 4.
+
+the seasonal fluctuations appear to increase in size as the trend
+increases, a multiplicative decomposition or a Box-Cox transformation
+might be considered
+
+\subsubsection{b. Using classical\_decomposition with
+type=multiplicative to calculate the trend-cycle and seasonal
+indices.}\label{b.-using-classical_decomposition-with-typemultiplicative-to-calculate-the-trend-cycle-and-seasonal-indices.}
+
+\subsubsection{Multiplicative
+Decomposition}\label{multiplicative-decomposition}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Perform classical multiplicative decomposition}
+\NormalTok{gas\_decomp }\OtherTok{\textless{}{-}}\NormalTok{ gas }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{model}\NormalTok{(}
+    \AttributeTok{classical =} \FunctionTok{classical\_decomposition}\NormalTok{(Gas, }\AttributeTok{type =} \StringTok{"multiplicative"}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{components}\NormalTok{()}
+
+\CommentTok{\# Plot the decomposed components}
+\NormalTok{gas\_decomp }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Classical Multiplicative Decomposition of Gas Production"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Removed 2 rows containing missing values or values outside the scale range
+## (`geom_line()`).
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-51-1.pdf}}
+Trend-Cycle (Panel 2) The Movement: The trend shows a steady, non-linear
+increase over the 5-year period The Gaps: There are empty spaces at the
+very beginning and end of the line. This is a characteristic of
+classical decomposition; because it uses a centered moving average 2X
+4-MA for quarterly data, we lose the first two and last two observations
+of the trend.
+
+Seasonal Indices (Panel 3) The Interpretation: Since this is a
+multiplicative model, the values are ratios. Peaks (Q2/Q3): The index
+hits roughly 1.12, meaning production in the winter quarters is about
+12\% higher than the average trend level. Troughs (Q1): The index drops
+to roughly 0.88, meaning summer production is about 12\% lower than the
+trend. Consistency: In classical decomposition, the seasonal pattern is
+assumed to be strictly periodic, which is why every ``wave'' in this
+panel looks identical.
+
+Random / Remainder (Panel 4) The Variation: This represents the
+``noise'' or unexpected fluctuations.
+
+The Scale: The values range from approximately 0.97 to 1.02. This tells
+us that the random ``shocks'' to the system generally stayed within 3\%
+of what the trend and seasonality predicted.
+
+Significant Dip: There is a notable drop in the remainder component
+around early 2008, where production was lower than expected even after
+accounting for the trend and winter season.
+
+\subsubsection{c.~Do the results support the graphical interpretation
+from part
+a?}\label{c.-do-the-results-support-the-graphical-interpretation-from-part-a}
+
+Yes, the results from the classical multiplicative decomposition
+strongly support the graphical interpretation we made in part A.
+
+The decomposition quantifies exactly what the initial plot suggested:
+
+Verification of Trend-Cycle Initial Observation: You identified a clear
+upward trend over the five-year period.
+
+Decomposition Result: The trend panel confirms this, showing the series
+level rising.
+
+The moving average used in the decomposition effectively filters out the
+seasonal spikes to reveal this steady growth.
+
+Verification of Seasonal Fluctuations Initial Observation: We noted
+strong, regular seasonal peaks in the middle quarters Q2/Q3 and troughs
+in Q1.
+
+Decomposition Result: The seasonal indices provide precise weights for
+these fluctuations:
+
+Winter Peaks: The indices show a multiplier of roughly 1.12 for the peak
+quarters, confirming that production jumps by about 12\% due to seasonal
+demand.
+
+Summer Troughs: The indices drop to approximately 0.88, confirming a
+12\% decrease during the warmer months.
+
+Justification for the Multiplicative Type Initial Observation: We may
+have noticed that the height of the seasonal spikes seemed to increase
+slightly as the overall trend moved upward.
+
+Decomposition Result: The fact that the remainder random panel stays
+relatively stable between 0.97 and 1.02 suggests that the multiplicative
+assumption
+
+where seasonality is proportional to the trend---was the correct choice
+for this data. If the seasonality were constant regardless of the trend,
+an additive model would have been more appropriate.
+
+\subsubsection{d.~Compute and plot the seasonally adjusted
+data.}\label{d.-compute-and-plot-the-seasonally-adjusted-data.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\CommentTok{\# 1. Prepare the data (last 5 years)}
+\NormalTok{gas }\OtherTok{\textless{}{-}} \FunctionTok{tail}\NormalTok{(aus\_production, }\DecValTok{5} \SpecialCharTok{*} \DecValTok{4}\NormalTok{) }\SpecialCharTok{|\textgreater{}} \FunctionTok{select}\NormalTok{(Gas)}
+
+\CommentTok{\# 2. Perform the decomposition and extract components}
+\NormalTok{gas\_decomp }\OtherTok{\textless{}{-}}\NormalTok{ gas }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{model}\NormalTok{(}\AttributeTok{classical =} \FunctionTok{classical\_decomposition}\NormalTok{(Gas, }\AttributeTok{type =} \StringTok{"multiplicative"}\NormalTok{)) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{components}\NormalTok{()}
+
+\CommentTok{\# 3. Plot the Seasonally Adjusted data}
+\NormalTok{gas\_decomp }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(season\_adjust) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Seasonally Adjusted Gas Production (Last 5 Years)"}\NormalTok{,}
+       \AttributeTok{subtitle =} \StringTok{"Multiplicative Seasonality Removed"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Petajoules"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-52-1.pdf}}
+\#\#\# Seasonally Adjusted Plot Shows The top panel of the second image
+season\_adjust shows the real underlying movement of gas production by
+removing the predictable quarterly spikes and dips.
+
+Smoothing the Path: In the original Gas plot, the line zigs and zags
+aggressively every year. The seasonally adjusted line is much smoother,
+making it easier to see how production is actually changing over time.
+
+Clearer Trend: We can now see a very clear, steady climb from below 200
+petajoules in 2005 to over 220 petajoules by 2010.
+
+Spotting Outliers: Notice the dip in early 2008 in the adjusted data. In
+the original plot, that dip was hidden by the normal seasonal drop, but
+the adjusted plot reveals that production fell slightly more than usual
+during that specific time.
+
+Why We Use It: Better Comparisons: It allows we to compare different
+quarters fairly. For example, we can see if Q1 summer of 2009 was
+actually better than Q1 of 2008 once the expected seasonal slump is
+ignored.
+
+Business Planning: It helps a business see if their growth is truly due
+to becoming more successful trend or just because it happens to be
+winter seasonality.
+
+Comparison to Classical Decomposition In your first image, the trend
+line is extremely smooth because it uses a moving average that cuts off
+the ends of the data. The season\_adjust line in the second image is
+slightly more bumpy because it still contains the random noise from the
+data, but it covers the entire 5-year period without those gaps at the
+beginning and end.
+
+\subsubsection{e. Change one observation to be an outlier (e.g., add 300
+to one observation), and recompute the seasonally adjusted data. What is
+the effect of the
+outlier?}\label{e.-change-one-observation-to-be-an-outlier-e.g.-add-300-to-one-observation-and-recompute-the-seasonally-adjusted-data.-what-is-the-effect-of-the-outlier}
+
+Create the Outlier and Recompute We adds 300 petajoules to the 10th
+observation (roughly the middle of the series) and re-calculates the
+seasonally adjusted data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\CommentTok{\# 1. Prepare the original 5{-}year data}
+\NormalTok{gas }\OtherTok{\textless{}{-}} \FunctionTok{tail}\NormalTok{(aus\_production, }\DecValTok{5} \SpecialCharTok{*} \DecValTok{4}\NormalTok{) }\SpecialCharTok{|\textgreater{}} \FunctionTok{select}\NormalTok{(Gas)}
+
+\CommentTok{\# 2. Create a version with an outlier (adding 300 to the 10th observation)}
+\NormalTok{gas\_outlier }\OtherTok{\textless{}{-}}\NormalTok{ gas}
+\NormalTok{gas\_outlier}\SpecialCharTok{$}\NormalTok{Gas[}\DecValTok{10}\NormalTok{] }\OtherTok{\textless{}{-}}\NormalTok{ gas\_outlier}\SpecialCharTok{$}\NormalTok{Gas[}\DecValTok{10}\NormalTok{] }\SpecialCharTok{+} \DecValTok{300}
+
+\CommentTok{\# 3. Recompute the multiplicative decomposition}
+\NormalTok{decomp\_outlier }\OtherTok{\textless{}{-}}\NormalTok{ gas\_outlier }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{model}\NormalTok{(}\AttributeTok{classical =} \FunctionTok{classical\_decomposition}\NormalTok{(Gas, }\AttributeTok{type =} \StringTok{"multiplicative"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{components}\NormalTok{()}
+
+\CommentTok{\# 4. Plot the new seasonally adjusted data}
+\NormalTok{decomp\_outlier }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{autoplot}\NormalTok{(season\_adjust) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Seasonally Adjusted Data with an Outlier"}\NormalTok{,}
+       \AttributeTok{subtitle =} \StringTok{"300 units added to the 10th observation"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Petajoules"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-53-1.pdf}}
+\#\#\# Impact of an Outlier on Seasonally Adjusted Data An outlier
+creates several distortions in a classical multiplicative decomposition:
+
+Immediate Spike: The seasonally adjusted series shows a massive,
+vertical peak at the exact timestamp of the modified observation.
+
+Index Distortion: Because classical decomposition calculates seasonal
+indices by averaging values for each quarter across all years, one
+extreme value inflates the average for that specific quarter.
+
+Systemic Bias: This inflated seasonal index is applied to the same
+quarter in every other year of the series.
+
+Artificial Dips: In years with normal data, the seasonally adjusted
+values appear lower than the actual trend because the math divides those
+normal figures by an incorrectly high seasonal index.
+
+Trend Blurring: Since the trend is calculated using a centered moving
+average, the extreme value ``bleeds'' into the trend calculations for
+several periods before and after the actual event.
+
+\subsubsection{f.~Does it make any difference if the outlier is near the
+end rather than in the middle of the time
+series?}\label{f.-does-it-make-any-difference-if-the-outlier-is-near-the-end-rather-than-in-the-middle-of-the-time-series}
+
+Yes, placement makes a significant difference in classical decomposition
+because of how moving averages work: Middle Outlier: Distorts the
+seasonal indices for the entire series.
+
+It is included in the trend calculation, which inflates the seasonal
+average for that quarter and creates dips in every other year of the
+adjusted data.
+
+End Outlier: Typically does not distort the seasonal indices. Because
+classical decomposition uses a centered moving average, the trend is
+undefined NA at the very end of the series.
+
+Since there is no trend value to subtract, the outlier is excluded from
+the seasonal index calculation, leaving the rest of the series stable.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(fpp3)}
+
+\CommentTok{\# 1. Get the base data}
+\NormalTok{gas\_base }\OtherTok{\textless{}{-}} \FunctionTok{tail}\NormalTok{(aus\_production, }\DecValTok{5} \SpecialCharTok{*} \DecValTok{4}\NormalTok{) }\SpecialCharTok{|\textgreater{}} \FunctionTok{select}\NormalTok{(Gas)}
+
+\CommentTok{\# 2. Case A: Outlier in the middle (10th point)}
+\NormalTok{gas\_mid }\OtherTok{\textless{}{-}}\NormalTok{ gas\_base}
+\NormalTok{gas\_mid}\SpecialCharTok{$}\NormalTok{Gas[}\DecValTok{10}\NormalTok{] }\OtherTok{\textless{}{-}}\NormalTok{ gas\_mid}\SpecialCharTok{$}\NormalTok{Gas[}\DecValTok{10}\NormalTok{] }\SpecialCharTok{+} \DecValTok{300}
+
+\CommentTok{\# 3. Case B: Outlier at the end (20th point)}
+\NormalTok{gas\_end }\OtherTok{\textless{}{-}}\NormalTok{ gas\_base}
+\NormalTok{gas\_end}\SpecialCharTok{$}\NormalTok{Gas[}\DecValTok{20}\NormalTok{] }\OtherTok{\textless{}{-}}\NormalTok{ gas\_end}\SpecialCharTok{$}\NormalTok{Gas[}\DecValTok{20}\NormalTok{] }\SpecialCharTok{+} \DecValTok{300}
+
+\CommentTok{\# 4. Decompose both}
+\NormalTok{decomp\_mid }\OtherTok{\textless{}{-}}\NormalTok{ gas\_mid }\SpecialCharTok{|\textgreater{}} \FunctionTok{model}\NormalTok{(}\FunctionTok{classical\_decomposition}\NormalTok{(Gas, }\AttributeTok{type=}\StringTok{"multiplicative"}\NormalTok{)) }\SpecialCharTok{|\textgreater{}} \FunctionTok{components}\NormalTok{()}
+\NormalTok{decomp\_end }\OtherTok{\textless{}{-}}\NormalTok{ gas\_end }\SpecialCharTok{|\textgreater{}} \FunctionTok{model}\NormalTok{(}\FunctionTok{classical\_decomposition}\NormalTok{(Gas, }\AttributeTok{type=}\StringTok{"multiplicative"}\NormalTok{)) }\SpecialCharTok{|\textgreater{}} \FunctionTok{components}\NormalTok{()}
+
+\CommentTok{\# 5. Check the Seasonal Indices}
+\CommentTok{\# Middle outlier changes the indices for every year}
+\FunctionTok{unique}\NormalTok{(decomp\_mid}\SpecialCharTok{$}\NormalTok{seasonal)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1.0570139 1.1236007 0.8209216 0.9984638
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# End outlier leaves indices identical to the original data}
+\FunctionTok{unique}\NormalTok{(decomp\_end}\SpecialCharTok{$}\NormalTok{seasonal)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1.1350627 0.8994388 0.8825771 1.0829214
+\end{verbatim}
+
+Middle Outlier Results When the outlier is in the middle, the calculated
+seasonal indices are:
+
+{[}1.057, 1.124, 0.821, 0.998{]}.
+
+Because the 10th observation has a valid trend value, it is included in
+the detrending process.
+
+This one extreme value pulls the average for its specific quarter away
+from the norm.
+
+This distorted index is then applied to every year in the series,
+creating dips in the seasonally adjusted data.
+
+End Outlier Results When the outlier is at the end, the seasonal indices
+are:
+
+{[}1.135, 0.899, 0.883, 1.083{]}.
+
+These indices are identical to those from the original, clean data.
+
+This happens because the centered moving average cannot calculate a
+trend for the 20th observation it requires at least two subsequent
+points.
+
+Since the trend is NA for the last two quarters, the outlier is
+mathematically excluded from the seasonal averages.
+
+\subsubsection{3.8 Recall your retail time series data (from Exercise 7
+in Section 2.10). Decompose the series using X-11. Does it reveal any
+outliers, or unusual features that you had not noticed
+previously?}\label{recall-your-retail-time-series-data-from-exercise-7-in-section-2.10.-decompose-the-series-using-x-11.-does-it-reveal-any-outliers-or-unusual-features-that-you-had-not-noticed-previously}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{12345678}\NormalTok{)}
+\NormalTok{myseries }\OtherTok{\textless{}{-}}\NormalTok{ aus\_retail }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{filter}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{Series ID}\StringTok{\textasciigrave{}} \SpecialCharTok{==} \FunctionTok{sample}\NormalTok{(aus\_retail}\SpecialCharTok{$}\StringTok{\textasciigrave{}}\AttributeTok{Series ID}\StringTok{\textasciigrave{}}\NormalTok{,}\DecValTok{1}\NormalTok{))}
+
+\NormalTok{myseries}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tsibble: 369 x 5 [1M]
+## # Key:       State, Industry [1]
+##    State              Industry                     `Series ID`    Month Turnover
+##    <chr>              <chr>                        <chr>          <mth>    <dbl>
+##  1 Northern Territory Clothing, footwear and pers~ A3349767W   1988 Apr      2.3
+##  2 Northern Territory Clothing, footwear and pers~ A3349767W   1988 May      2.9
+##  3 Northern Territory Clothing, footwear and pers~ A3349767W   1988 Jun      2.6
+##  4 Northern Territory Clothing, footwear and pers~ A3349767W   1988 Jul      2.8
+##  5 Northern Territory Clothing, footwear and pers~ A3349767W   1988 Aug      2.9
+##  6 Northern Territory Clothing, footwear and pers~ A3349767W   1988 Sep      3  
+##  7 Northern Territory Clothing, footwear and pers~ A3349767W   1988 Oct      3.1
+##  8 Northern Territory Clothing, footwear and pers~ A3349767W   1988 Nov      3  
+##  9 Northern Territory Clothing, footwear and pers~ A3349767W   1988 Dec      4.2
+## 10 Northern Territory Clothing, footwear and pers~ A3349767W   1989 Jan      2.7
+## # i 359 more rows
+\end{verbatim}
+
+\subsubsection{Decomposition Using X11}\label{decomposition-using-x11}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Load the necessary libraries}
+\FunctionTok{library}\NormalTok{(fpp3)}
+\FunctionTok{library}\NormalTok{(seasonal)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'seasonal' was built under R version 4.3.3
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'seasonal'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:tibble':
+## 
+##     view
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Perform the X{-}11 decomposition}
+\NormalTok{x11\_dcmp }\OtherTok{\textless{}{-}}\NormalTok{ myseries }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{model}\NormalTok{(}\AttributeTok{x11 =} \FunctionTok{X\_13ARIMA\_SEATS}\NormalTok{(Turnover }\SpecialCharTok{\textasciitilde{}} \FunctionTok{x11}\NormalTok{())) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{components}\NormalTok{()}
+
+\CommentTok{\# Generate the decomposition plot}
+\FunctionTok{autoplot}\NormalTok{(x11\_dcmp) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"X{-}11 Decomposition of Australian Retail Turnover"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Assignment_2_Data_624_files/figure-latex/unnamed-chunk-56-1.pdf}}
+\#\#\# Analysis of X-11 Decomposition Features
+
+The X-11 decomposition demonstrates that while the overall retail
+turnover follows a consistent upward path:
+
+Identification of Outliers: The irregular component at the bottom of the
+decomposition provides a clear view of data points that deviate from the
+established trend and seasonal patterns. These fluctuations represent
+the primary outliers and unusual features within the series.
+
+Significant Historical Spikes: A prominent spike in the irregular
+component is visible around mid-2000.
+
+Economic Volatility: The irregular component also highlights other sharp
+fluctuations, which may represent one-off events such as local supply
+chain disruptions or extreme weather that affected monthly turnover.
+
+Trend-Cycle Clarity: The trend panel reveals the long-term economic
+trajectory, showing periods of stagnation or decline, such as a
+flattening around 2008--2009 that may reflect the impact of the Global
+Financial Crisis.
+
+Evolutionary Seasonality: X-11 allows the seasonal component to change
+slowly over time. Analysis of this panel can reveal if the intensity of
+specific shopping periods, such as the December peak, has shifted over
+the decades.
+
+\subsubsection{3.9 Figures 3.19 and 3.20 show the result of decomposing
+the number of persons in the civilian labour force in Australia each
+month from February 1978 to August
+1995.}\label{figures-3.19-and-3.20-show-the-result-of-decomposing-the-number-of-persons-in-the-civilian-labour-force-in-australia-each-month-from-february-1978-to-august-1995.}
+
+\subsubsection{a. Write about 3--5 sentences describing the results of
+the decomposition. Pay particular attention to the scales of the graphs
+in making your
+interpretation.}\label{a.-write-about-35-sentences-describing-the-results-of-the-decomposition.-pay-particular-attention-to-the-scales-of-the-graphs-in-making-your-interpretation.}
+
+The decomposition of the Australian civilian labor force from 1978 to
+1995 shows the following results:
+
+Strong Growth Trend: The trend-cycle shows a steady and significant
+increase over the years, rising from approximately 6,500 to 9,000
+persons.
+
+Small Seasonal Impact: Although the seasonal peaks and troughs look
+busy, the scale is very small around 100 compared to the total number of
+people up to 9,000 - meaning seasonality has a minor impact on the
+total.
+
+Changing Patterns: The seasonal sub-series plot shows that the patterns
+are not fixed; for example, the number of workers in March decreased
+over time while December grew stronger.
+
+Major Outlier in 1991: The remainder component is mostly small, but
+there is a very large drop near 1991 that reaches -400, pointing to a
+significant unusual event that the trend and season cannot explain.
+
+\subsubsection{b. Is the recession of 1991/1992 visible in the estimated
+components?}\label{b.-is-the-recession-of-19911992-visible-in-the-estimated-components}
+
+Yes, the recession of 1991/1992 is clearly visible in the estimated
+components of the Australian civilian labor force:
+
+Remainder Component: The most obvious evidence is the massive downward
+spike in the remainder panel around 1991. This spike reaches a value of
+approximately -400, which is much larger than any other fluctuation in
+that panel.
+
+Trend-Cycle Component: There is a noticeable flattening or slight dip in
+the trend line during the early 1990s. The long-term trend is generally
+upward, this period shows a clear pause in growth, reflecting the
+economic downturn.
+
+Scale Comparison: The importance of this event is emphasized by the
+scales. While the seasonal changes are small 100, the -400 drop in the
+remainder component shows that the recession had a much stronger impact
+on employment than regular seasonal changes.
+
+\end{document}
