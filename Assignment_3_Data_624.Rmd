@@ -1,0 +1,203 @@
+---
+title: "Assignment_3_Data_624"
+author: "Mubashira Qari"
+date: "2026-02-16"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+### 5.1 Produce forecasts for the following series using whichever of NAIVE(y), SNAIVE(y) or RW(y ~ drift()) is more appropriate in each case:
+
+- Australian Population (`global_economy`)
+- Bricks (`aus_production`)
+- NSW Lambs (`aus_livestock`)
+- Household wealth (`hh_budget`)
+- Australian takeaway food turnover (`aus_retail`)
+
+**Model Usage**
+
+NAIVE(y): Best where the future is simply expected to be the same as the last observed value (common in stock prices).
+
+SNAIVE(y): (Seasonal Naive) Best for data with a clear seasonal pattern (e.g., monthly retail sales). It sets the forecast to be the same as the last observed value from the same season.
+
+RW(y ~ drift()): Best for data that shows a consistent long-term trend (upward or downward) over time.
+
+
+### Australian Population (`global_economy`)
+
+
+**Analyze and Identify the Data Frequency**
+
+```{r}
+library(fpp3)
+
+# global_economy
+```
+
+**Prepare the Data**
+
+```{r}
+gdp_pc <- global_economy |>
+  mutate(GDP_per_capita = GDP / Population) |>
+  filter(!is.na(GDP_per_capita))
+
+view(gdp_pc)
+```
+
+
+```{r message=FALSE}
+
+gdp_pc |>
+  filter(Country == "Australia") |>
+  autoplot(GDP_per_capita) +
+  labs(y = "$US", title = "GDP per capita for Australia")
+
+```
+**Model Selection**
+
+To choose between NAIVE(), SNAIVE(), or RW(drift()), we examine the time plot for trend and seasonality.
+
+Trend: The data shows a clear, consistent upward movement.
+
+Seasonality: Seasonality requires multiple observations per year like monthly or quarterly data to see repeating patterns. Therefore, SNAIVE(y) is not applicable.
+
+Growth over Stability: The NAIVE(y) method assumes the future will be exactly like the last observed value, resulting in a flat horizontal line. 
+
+Since the economy typically grows over time, a flat line would likely underestimate the future.
+
+Conclusion: The Drift Method is a variation of the naive approach that forecasts trends by extending the average historical change over time.
+
+**Fit the model, Generating Forecast and Plotting**
+
+```{r}
+# Fit the Drift model
+fit_gdp <- gdp_pc |>
+  filter(Country == "Australia") |>
+  model(Drift = RW(GDP_per_capita ~ drift()))
+
+# Generate a 10-year forecast
+fc_gdp <- fit_gdp |>
+  forecast(h = "10 years")
+
+# Plot the forecast alongside historical data
+fc_gdp |>
+  autoplot(gdp_pc) +
+  labs(y = "$US", title = "GDP per capita for Australia: 10-Year Drift Forecast")
+```
+
+### Bricks (`aus_production`)
+
+**Analyze and Identify the Data Frequency**
+
+```{r}
+# view(aus_production)
+```
+
+
+**Prepare the Data**
+
+```{r}
+brick_data <- aus_production |>
+  filter(!is.na(Bricks))
+
+# view(brick_data)
+```
+
+
+```{r message=FALSE}
+
+brick_data <- aus_production |>
+  filter(!is.na(Bricks)) |>
+  select(Quarter, Bricks)
+
+# brick_data
+
+```
+
+```{r}
+# Create a time plot of the cleaned brick data
+brick_data |>
+  autoplot(Bricks) +
+  labs(title = "Clay Bricks Production in Australia",
+       y = "Million Bricks",
+       x = "Quarter")
+```
+
+**Model Selection**
+
+Seasonality: There is a clear, repeating quarterly zig-zag pattern.
+
+Conclusion: Therefore, the Seasonal Naive (SNAIVE) method is the most appropriate choice because it assumes that the production in a future quarter will be the same as the production in that same quarter last year.
+
+**Fit the model, Generating Forecast and Plotting**
+
+```{r}
+# Fit the model
+brick_fit <- brick_data |>
+  model(SNaive = SNAIVE(Bricks))
+
+# Generate the forecast for 2 years (8 quarters)
+brick_fc <- brick_fit |>
+  forecast(h = "2 years")
+
+# Plot the forecast alongside historical data
+brick_fc |>
+  autoplot(brick_data) +
+  labs(title = "Clay Bricks: 2-Year Seasonal Naive Forecast",
+       y = "Million Bricks")
+```
+### NSW Lambs (`aus_livestock`) 
+
+**Analyze and Identify the Data Frequency**
+
+```{r}
+view(aus_livestock)
+```
+
+**Prepare the Data**
+
+```{r}
+nsw_lambs <- aus_livestock |>
+  filter(State == "New South Wales", Animal == "Lambs") |>
+  select(Month, Count)
+
+# nsw_lambs
+```
+
+
+```{r}
+nsw_lambs |>
+  autoplot(Count) +
+  labs(title = "NSW Lambs Count", y = "Number of Lambs")
+```
+**Model Selection**
+
+Seasonality: The plot shows clear, regular spikes and dips that repeat every year.
+
+Frequency: The x-axis shows Month, meaning there are 12 observations per year.
+
+Conclusion: Because the data is seasonal, SNAIVE(Count) is the most appropriate benchmark method. 
+It will forecast future months by simply looking at what happened in that same month last year (e.g., forecasting next January based on this January).
+
+
+**Fit the model, Generating Forecast and Plotting**
+
+```{r}
+# Fit the Seasonal Naive model
+fit_lambs <- nsw_lambs |>
+  model(SNaive = SNAIVE(Count))
+
+# Generate a 3-year forecast (36 months)
+fc_lambs <- fit_lambs |>
+  forecast(h = "3 years")
+
+# Plot the forecast results
+fc_lambs |>
+  autoplot(nsw_lambs) +
+  labs(title = "NSW Lambs: 3-Year Seasonal Naive Forecast",
+       y = "Number of Lambs")
+```
+
