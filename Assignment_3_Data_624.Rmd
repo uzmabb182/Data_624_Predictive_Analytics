@@ -454,7 +454,7 @@ Avoids Over-Optimism: The Drift method is too optimistic because it only looks a
 
 ### 5.3 Apply a seasonal naïve method to the quarterly Australian beer production data from 1992. Check if the residuals look like white noise, and plot the forecasts. The following code will help.
 
-```{r}
+```{r message=FALSE}
 # Extract data from 1992 onwards
 recent_production <- aus_production |> 
   filter(year(Quarter) >= 1992)
@@ -484,7 +484,7 @@ Histogram: The residual distribution is slightly skewed to the left and not perf
 Forecast Plot: The visualization shows the Seasonal Naive forecasts repeating the seasonal pattern from the final year of data, 
 with widening prediction intervals reflecting increasing uncertainty over the 2-year horizon.
 
-### 3.4 Repeat the previous exercise using the Australian Exports series from global_economy and the Bricks series from aus_production. Use whichever of NAIVE() or SNAIVE() is more appropriate in each case.
+### 5.4 Repeat the previous exercise using the Australian Exports series from global_economy and the Bricks series from aus_production. Use whichever of NAIVE() or SNAIVE() is more appropriate in each case.
 
 **Australian Exports (global_economy)**
 
