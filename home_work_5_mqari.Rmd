@@ -1,0 +1,392 @@
+---
+title: "HW_5_mqari"
+author: "Mubashira Qari"
+date: "2026-02-23"
+output: html_document
+---
+
+
+
+
+```{r}
+library(fpp3)
+
+algeria_economy <- global_economy |>
+  filter(Country == "Algeria")
+algeria_economy |>
+  autoplot(Exports) +
+  labs(y = "% of GDP", title = "Exports: Algeria")
+```
+The simplest of the exponentially smoothing methods is naturally called simple exponential smoothing (SES)16. This method is suitable for forecasting data with no clear trend or seasonal pattern.
+
+
+```{r}
+
+algeria_economy <- global_economy |>
+  filter(Country == "Algeria")
+
+algeria_fit <- algeria_economy |>
+  model(ANN = ETS(Exports ~ error("A") + trend("N") + season("N")))
+
+report(algeria_fit)
+```
+
+Take the mable, add the components of it and plot them
+
+```{r}
+components(algeria_fit) |> autoplot()
+```
+Now we left Join the fitted values to the components
+
+```{r}
+components(fit) |>
+  left_join(fitted(fit), by = c("Country", ".model", "Year"))
+```
+Now generate the forecast
+```{r}
+algeria_fit |>
+  forecast(h = "5 years") |>
+  autoplot(algeria_economy) + 
+ labs(y = "% of GDP", title = "Exports: Algeria")
+```
+Holt's Linear Trend
+
+Component Form:
+Forcast
+Level
+Trend
+
+Example: Australian Population
+
+Code to fit the model
+
+```{r}
+aus_economy <- global_economy |>
+  filter(Code == "AUS")
+
+aus_economy
+```
+After fitting the model it comes back with the estimates of the parameters
+
+```{r}
+aus_economy <- global_economy |>
+  filter(Code == "AUS") |>
+  mutate(Pop = Population/1e6)
+  
+aus_fit <- aus_economy |>
+  model(ANN = ETS(Pop ~ error("A") + trend("A") + season("N")))
+
+report(aus_fit)
+```
+
+If we take that model fit and add to component function, we get the individual component
+
+```{r}
+components(aus_fit) |> autoplot()
+```
+Now take the Components and add it to the fitted values
+Data = Pop, Alpha level changes = l, slope changes = beta, remainder = fitted-Pop
+
+```{r}
+components(aus_fit) |> 
+  left_join(fitted(aus_fit), by = c("Country", ".model", "Year"))
+```
+
+Visualizing Forecast Equation
+It picked up the trend of the end of the series
+```{r}
+aus_fit |>
+  forecast(h=10) |>
+  autoplot(aus_economy) +
+  labs(y = "Millions", title = "Poulation: Australia")
+```
+Damped Trend Method
+
+It damped the trend
+larger value of damping less damping occurs
+smaller value then flattens quickly
+
+
+```{r}
+aus_economy <- global_economy |>
+  filter(Code == "AUS") |>
+  mutate(Pop = Population/1e6)
+  
+aus_economy |>
+  model(holt = ETS(Pop ~ error("A") + trend("Ad") + season("N"))) |> # Added pipe here
+  forecast(h = 20) |>
+  autoplot(aus_economy)
+```
+Lets now see all the three models that we are introduced in this chapter
+
+```{r}
+aus_fit <- aus_economy |>
+  filter(Year <=2010) |>
+  model(
+    SES = ETS(Pop ~ error("A") + trend("N") + season("N")),
+    Holt = ETS(Pop ~ error("A") + trend("A") + season("N")),
+    Damped = ETS(Pop ~ error("A") + trend("Ad") + season("N"))
+  )
+report(aus_fit)
+```
+SES: Simple Exponential Smoothing Model - Additive Error No Trend No Seasonality
+Holt: Holt Linear Method - Additive Error Additive Trend and No Seasonality
+Damped: Damped Trend - Additive Error Additive Damped trend and No Seasonality
+
+tidy() function - get the coefficients
+accuracy() function - get various measure of accuracy
+
+```{r}
+tidy(aus_fit) # esimates
+accuracy(aus_fit) # accuracy metrics
+```
+This shows how to compare trends in the three models
+
+We will cover how to compare seasonality in other sections below
+
+Holt and Winters method captured seasonality
+
+gamma = 0 no change
+
+gamma = 1 close to seasonal naive
+
+usually gamma <= 0.2
+
+Using Additive Halt Winter Method and Multiplicative Halt Winter Method
+
+```{r}
+aus_holidays <- tourism |>
+  filter(Purpose == "Holiday") |>
+  summarize(Trips = sum(Trips))
+
+holidays_fit <- aus_holidays |>
+  model(
+    additive = ETS(Trips ~ error("A") + trend("A") + season("A")),
+    multiplicative = ETS(Trips ~ error("M") + trend("A") + season("M"))
+  ) 
+fc <- holidays_fit |> forecast()
+
+report(holidays_fit)
+```
+Get the Estimated Coefficients
+
+```{r}
+tidy(holidays_fit) |>
+  spread(.model, estimate)
+```
+
+Finding Estimated Components and left joining fitted values to have comparison
+
+Additive: level+slope+season = fitted value
+Multiplicative: level+slope*season = fitted value
+
+```{r}
+components(holidays_fit) |>
+  filter(.model == "additive") |>
+  left_join(fitted(holidays_fit), by = c(".model", "Quarter"))
+```
+```{r}
+# Compare additive and multiplicative components side-by-side
+holidays_fit |>
+  components() |>
+  left_join(fitted(holidays_fit), by = c(".model", "Quarter"))
+```
+
+
+```{r}
+components(holidays_fit) |> autoplot()
+```
+
+```{r}
+# 1. Fit both models
+holidays_fit <- aus_holidays |>
+  model(
+    additive = ETS(Trips ~ error("A") + trend("A") + season("A")),
+    multiplicative = ETS(Trips ~ error("M") + trend("A") + season("M"))
+  )
+
+# 2. Plot with .model assigned ONLY to columns
+holidays_fit |>
+  components() |>
+  autoplot() +
+  facet_grid(cols = vars(.model), scales = "free_y") + 
+  labs(title = "Side-by-Side Comparison of ETS Components")
+```
+```{r}
+library(tidyverse)
+
+library(tidyverse)
+
+holidays_fit |>
+  components() |>
+  # Ensure we are selecting the right columns
+  pivot_longer(c(Trips, level, slope, season, remainder), 
+               names_to = "component", values_to = "value") |>
+  mutate(component = factor(component, 
+         levels = c("Trips", "level", "slope", "season", "remainder"))) |>
+  ggplot(aes(x = Quarter, y = value)) +
+  geom_line() +
+  # This is the key: independent scales for every single box
+  facet_grid(rows = vars(component), cols = vars(.model), scales = "free_y") +
+  theme_minimal() +
+  labs(title = "Additive vs Multiplicative Components",
+       subtitle = "Note: Multiplicative season/remainder are ratios",
+       y = NULL)
+```
+Forecast using two methods (Additive & Multiplicative)
+
+Multiplicative is better in adding seasonality here as it shows wider
+
+```{r}
+fc |>
+  autoplot(aus_holidays, level =NULL) +
+  labs(y = "Thousand", title = "Overnight trips")
+```
+
+Example: Holt-Winters method with daily data
+
+The Holt-Winters method can also be used for daily type of data, where the seasonal period is  
+m=7 . Here we forecast pedestrian traffic at a busy Melbourne train station in July 2016.
+
+```{r}
+pedestrian_per_day <- pedestrian |>
+  filter(Sensor == "Southern Cross Station", yearmonth(Date) == yearmonth("2016 July")) |>
+  index_by(Date) |>
+  summarise(Count = sum(Count))
+
+pedestrian_fit <- pedestrian_per_day |>
+  model(ETS(Count ~ error("A") + trend("Ad") + season("M")))
+
+pedestrian_fit %>% report()
+```
+
+Here we estimate 9 inital values, 1 for level, 1 for slope, and 7 for seasonal index.
+```{r}
+pedestrian_fit |>
+  forecast(h = "2 weeks") |>
+  autoplot(pedestrian_per_day)
+```
+Daily data with bust on weekends and peaks on weekdays
+
+```{r}
+sth_cross_ped <- pedestrian |>
+  filter(
+    Sensor == "Southern Cross Station", 
+    Date >= "2016-07-01") |>
+  index_by(Date) |>
+  summarise(Count = sum(Count)/1000)
+
+# Forecast and Plot
+sth_cross_ped |>
+  filter(Date <= "2016-07-31") |>
+  model(ets = ETS(Count ~ error("M") + trend("Ad") + season("M"))) |>
+  forecast(h = "2 weeks") |>
+  autoplot(sth_cross_ped |> filter(Date <= "2016-08-14")) + # Use + for ggplot layers
+  labs(
+    title = "Daily traffic: Southern Cross",
+    y = "Pedestrians ('000)"
+  )
+```
+
+Example: Domestic holiday tourist visitor nights in Australia
+Forcasting aus_hodidays tibble time series using ETS model
+Model return Model: ETS(M,N,M) = Multiplicative Errors No Trend Multiplicative Seasonality
+
+```{r}
+aus_holidays <- tourism |>
+  filter(Purpose == "Holiday") |>
+  summarise(Trips = sum(Trips))  
+
+holidays_fit <- aus_holidays |> 
+  model(ETS(Trips))
+
+holidays_fit |> report()
+```
+lets print out the components
+here remainder is a relative error
+```{r}
+holidays_fit |>
+  components() |> 
+  autoplot() +
+  labs(title = "ETS(M,N,M) components")
+```
+lets plot the residuals
+
+```{r}
+residuals(holidays_fit) |>
+  autoplot() + 
+  ggtitle("Innovation errors")
+
+residuals(holidays_fit, type = "response") |> 
+  autoplot() + 
+  ggtitle("Response errors")
+```
+We can see the Innovation and residual  to list
+
+```{r}
+holidays_fit |>
+  augment()
+```
+
+Forecasting
+
+```{r}
+holidays_fit |>
+  forecast(h = 8) |> 
+  autoplot(aus_holidays, level = 95)
+```
+Forecasting with ETS models
+
+ETS Forecasting Workflow
+
+```{r}
+library(fpp3)
+
+# 1. Prepare the data (Corticosteroid drug sales)
+h02_data <- PBS |>
+  filter(ATC2 == "H02") |>
+  summarise(Cost = sum(Cost))
+
+# 2. Fit the ETS model (Letting R choose the best model automatically)
+h02_fit <- h02_data |>
+  model(auto = ETS(Cost))
+report(h02_fit)
+
+# OR Choosing AAA Model manually - giving worse forecast seeing AIC value
+h02_fit1 <- h02_data |>
+  model(AAA = ETS(Cost ~  error("A") + trend("A") + season("A"))) |>
+report(h02_fit1)
+
+# 3. Generate forecasts for the next 2 years (24 months)
+h02_fc <- h02_fit |>
+  forecast(h = "2 years")
+
+# 4. Plot the results
+h02_fc |>
+  autoplot(h02_data) +
+  labs(title = "Corticosteroid Drug Sales Forecast",
+       y = "$ Cost", x = "Month")
+```
+
+
+```{r}
+
+tidy(h02_fit) # esimates
+accuracy(h02_fit) # accuracy metrics
+
+tidy(h02_fit1) # esimates
+accuracy(h02_fit1) # accuracy metrics
+```
+Combining two two compare results
+
+```{r}
+h02_data <- PBS |>
+  model(
+    auto = ETS(Cost), 
+    AAA = ETS(Cost ~  error("A") + trend("A") + season("A"))
+  ) |>
+  accuracy()
+``` 
+
+
+

@@ -1,0 +1,243 @@
+---
+title: "Assignment_4_Data_624"
+author: "Mubashira Qari"
+date: "2026-02-16"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+### Exercise 3.1 (a) Visualizing Distributions and Relationships
+
+To understand the individual distributions of the nine predictors and the relationships between them, histograms and a correlation matrix are utilized.
+
+```{r message=FALSE}
+library(mlbench)
+library(tidyverse)
+library(corrplot)
+
+data(Glass)
+
+# 1. Visualizing Distributions (Histograms)
+Glass %>%
+  pivot_longer(cols = RI:Fe, names_to = "Predictor", values_to = "Value") %>%
+  ggplot(aes(x = Value)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ Predictor, scales = "free") +
+  labs(title = "Distributions of Glass Predictors")
+
+# 2. Visualizing Relationships (Correlation Matrix)
+cor_matrix <- cor(Glass[, 1:9])
+corrplot(cor_matrix, method = "color", type = "upper", 
+         addCoef.col = "black", number.cexs = 0.7)
+```
+
+### (b) Outliers and Skewness
+
+Based on the visualizations and statistical summaries, the following observations are made regarding the data quality:
+
+Skewness: Several predictors exhibit significant skewness. 
+Elements like Ba (Barium), Fe (Iron), and K (Potassium) are highly right-skewed because many samples have values near zero.
+RI (Refractive Index) and Ca (Calcium) also show moderate right skewness.
+
+Outliers: The histograms and boxplots (if generated) reveal distinct outliers in nearly all predictors, 
+particularly in K, Ba, and RI. For instance, K has a few samples with much higher values than the rest of the cluster.
+
+```{r message=FALSE}
+# Check skewness numerically
+library(e1071)
+apply(Glass[, 1:9], 2, skewness)
+```
+
+### (c) Relevant Transformations
+
+To improve a classification model, specific transformations should be applied to address the issues identified in part (b):
+
+Box-Cox Transformation: This is effective for resolving skewness in predictors like RI, Ca, and Al. Note that it requires strictly positive values, 
+so predictors with zeros (like Ba, Fe, and K) would require a prior shift or a different transformation.
+
+Centering and Scaling: Since predictors like Si (values ~70) and Fe (values ~0.1) are on vastly different scales, 
+centering and scaling are necessary for many models (e.g., SVM or KNN) to ensure all features contribute equally.
+
+Spatial Sign Transformation: Because significant outliers are present, the spatial sign transformation can be used to 
+project predictor values onto a sphere, effectively minimizing the impact of extreme values.
+
+Principal Component Analysis (PCA): The correlation plot shows a strong relationship between RI and Ca. 
+PCA can be used to reduce this redundancy and address collinearity.
+
+```{r message=FALSE}
+# Example of applying pre-processing using caret
+library(caret)
+glass_prep <- preProcess(Glass[, 1:9], 
+                         method = c("BoxCox", "center", "scale", "spatialSign"))
+glass_transformed <- predict(glass_prep, Glass[, 1:9])
+
+# glass_transformed
+```
+
+### 3. Exercise 3.2: Soybean Missing Value Analysis
+
+Investigating  missing data patterns.
+
+```{r}
+library(mlbench)
+library(tidyverse)
+library(naniar) # Helpful for missing data visualization
+
+data(Soybean)
+
+# Identify the number of missing values per class
+Soybean %>%
+  group_by(Class) %>%
+  summarise(
+    total_obs = n(),
+    missing_values = sum(is.na(across(everything()))),
+    pct_missing = (missing_values / (total_obs * ncol(Soybean))) * 100
+  ) %>%
+  arrange(desc(pct_missing))
+```
+**Summary of Findings for Soybean Data**
+
+Class-Specific Missingness: Missing values are concentrated in specific disease categories like phytophthora-rot, herbicide-injury, and 2-4-d-injury.
+
+Implication: Deleting these rows would eliminate almost all examples of these specific diseases from the dataset, making the model unable to recognize them.
+
+Resolution Strategy: For this dataset, using imputation (like knnImpute) or treating "missing" as its own categorical level is more effective than removing data.
+
+### (a) Investigate Frequency Distributions for Categorical Predictors
+
+Investigate the frequency distributions for the categorical predictors. 
+Are any of the distributions degenerate in the ways discussed earlier in this
+chapter?
+
+A categorical predictor is a variable with categories (e.g., Gender, Yes/No, Type A/B/C).
+
+A distribution is degenerate when it causes modeling problems. Common issues:
+
+Zero variance predictor: Only one category appears and this variable provides no predictive value
+Near-zero variance predictor: One category dominates heavily. Model may struggle to learn from rare category.
+Very sparse categories: Some categories appear only a few times.Can cause unstable estimates.
+
+**Look at Frequency Tables**
+
+```{r}
+table(Soybean$date)
+
+# for all predictors:
+lapply(Soybean, table)
+
+```
+**Check for Zero / Near-Zero Variance (Using caret)**
+
+```{r}
+
+library(caret)
+
+nzv <- nearZeroVar(Soybean, saveMetrics = TRUE)
+nzv
+
+
+```
+**Conclusion**
+
+Frequency distributions were examined using contingency tables and near-zero variance diagnostics. 
+No predictors exhibited zero variance. However, some predictors show moderate imbalance, although none meet strict near-zero variance thresholds. 
+Therefore, no categorical predictors are completely degenerate.
+
+### b. Investigate Missing Data (18%)
+
+**Confirm Overall Missing Percentage**
+
+```{r}
+
+mean(is.na(Soybean)) * 100
+
+```
+
+**Missing Percentage Per Predictor**
+
+```{r}
+colMeans(is.na(Soybean)) * 100
+
+# Sorting them
+sort(colMeans(is.na(Soybean)) * 100, decreasing = TRUE)
+
+```
+
+This shows which predictors are most missing.
+
+Some predictors have very high missing rates and others have none
+
+**Is Missingness Related to Class?**
+
+Create missing indicators for highly missing variables.
+
+```{r}
+
+Soybean$hail_missing <- ifelse(is.na(Soybean$hail), 1, 0)
+
+table(Soybean$hail_missing, Soybean$Class)
+
+
+```
+
+**test statistically**
+
+```{r}
+chisq.test(table(Soybean$hail_missing, Soybean$Class))
+
+```
+
+**Conclusion**
+
+issingness Overview: The overall missingness is confirmed at approximately 18%, but the distribution is highly uneven across predictors.
+
+Variable Variance: Your sorted list identifies that some predictors are significantly more prone to missing values than others, which could impact model stability.
+
+Informative Missingness: The table() and Chi-square results indicate that missing values are heavily concentrated in specific disease classes (such as phytophthora-rot and herbicide-injury).
+
+Modelling Impact: Since missingness is associated with the response class, the data is not "Missing Completely at Random" (MCAR). 
+Deleting these observations would systematically remove nearly all examples of certain diseases, making imputation the necessary next step.
+
+
+### c. Develop a strategy for handling missing data, either by eliminating predictors or imputation.
+
+**Elimination Strategy (Filtering)**
+
+```{r message=FALSE}
+# Load the necessary library
+library(caret)
+
+# Identify and remove Near-Zero Variance (NZV) predictors
+# This removes uninformative variables that could crash certain models
+nzv_metrics <- nearZeroVar(Soybean, saveMetrics = TRUE)
+soy_filtered <- Soybean[, !nzv_metrics$nzv]
+
+# Prepare for Imputation
+# Since most predictors are factors, they must be converted to dummy variables 
+# to allow for numerical imputation methods like KNN
+soy_dummy_model <- dummyVars(Class ~ ., data = soy_filtered)
+soy_numeric <- predict(soy_dummy_model, newdata = soy_filtered)
+
+# Apply KNN Imputation
+# This estimates missing values based on the 5 most similar observations
+# knnImpute also centers and scales the data automatically
+soy_preproc <- preProcess(soy_numeric, method = "knnImpute")
+soy_final <- predict(soy_preproc, soy_numeric)
+
+# Verify no missing values remain
+sum(is.na(soy_final))
+```
+
+Now the data is now suitable for predictive modeling by addressing the issues identified during exploration.
+
+Near-Zero Variance Filtering: Predictors with little to no variation were removed to prevent numerical errors and reduce model complexity.
+
+Dummy Variable Encoding: The categorical predictors were converted into a numerical format, which is a requirement for distance-based imputation methods like KNN.
+
+KNN Imputation: Instead of discarding observations, missing values were estimated using the most similar neighboring samples. 
+This was critical because the missingness was associated with specific disease classes, and deletion would have biased the model.
+
+Standardization: The data was automatically centered and scaled during the imputation process, ensuring that all predictors are on a comparable scale for the classification algorithm.
+

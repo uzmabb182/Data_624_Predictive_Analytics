@@ -1,0 +1,651 @@
+---
+title: "Assignment_5_Data_624"
+author: "Mubashira Qari"
+date: "2026-02-22"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+### 8.1. Consider the the number of pigs slaughtered in Victoria, available in the aus_livestock dataset.
+
+### a.Use the ETS() function to estimate the equivalent model for simple exponential smoothing. Find the optimal values of  α and  ℓ0 , and generate forecasts for the next four months.
+
+
+```{r warning==FALSE}
+
+library(fpp3)
+
+# View(aus_livestock)
+
+```
+
+**Filtering & Visualizing the data  for Pigs in Victoria**
+
+```{r}
+
+pigs_vic <- aus_livestock |>
+  filter(Animal == "Pigs", State == "Victoria")
+
+pigs_vic |> 
+  autoplot(Count) +
+  labs(title = "Trends of Pigs Slaughtered in Victoria", y = "Number of Pigs")
+```
+
+**Fitting and Estimating the ETS Model (SES)**
+
+ETS(A,N,N) model
+
+To perform Simple Exponential Smoothing within the ETS framework, 
+we use error("A"), trend("N"), and season("N") 
+
+```{r}
+
+aus_fit <- pigs_vic |>
+  model(ANN = ETS(Count ~ error("A") + trend("N") + season("N")))
+
+report(aus_fit)
+```
+
+**Interpretation**
+
+This model assumes the data has an additive error structure but no trend and no seasonality
+
+Smoothing Parameter (Alpha): A moderate alpha value suggests the model places roughly 32% weight on the most recent observation
+and 68% weight on older data. It produces a balanced forecast that doesn't overreact to monthly fluctuations.
+
+Initial state: This represents the estimated baseline level of pig slaughters at the very start of the time series.
+
+Residual Variance: The value of 87,480,760 indicates the variability of the series. 
+
+Since there is no trend component, the forecast for the next four months will be a 
+flat horizontal line based on the last estimated level.
+
+**Generating Forecasts for 4 Months**
+
+```{r}
+
+aus_forecast <- aus_fit |>
+  forecast(h = 4)
+
+# View the forecast table
+aus_forecast
+```
+**Visualize the Results**
+
+```{r}
+aus_forecast |>
+  autoplot(pigs_vic |> 
+  filter(Month >= yearmonth("2015 Jan"))) +
+  labs(title = "4-Month ETS Forecast for Victoria Pigs",
+       y = "Pigs Slaughtered")
+```
+### b. Compute a 95% prediction interval for the first forecast using ^y±1.96s where s is the standard deviation of the residuals. Compare your interval with the interval produced by R.
+
+
+**Extracting the residuals and calculate their standard deviation**
+
+```{r}
+
+res_std <- augment(aus_fit) |>
+  pull(.resid) |>
+  sd(na.rm = TRUE)
+
+# Getting the first forecast value (Point Forecast)
+first_fc <- aus_forecast |> filter(row_number() == 1)
+y_hat <- first_fc |> pull(.mean)
+
+#Calculating the manual boundaries
+lower_manual <- y_hat - 1.96 * res_std
+upper_manual <- y_hat + 1.96 * res_std
+
+cat("Manual 95% PI: [", lower_manual, ", ", upper_manual, "]\n")
+```
+
+**Extracting R's Prediction Interval**
+
+```{r}
+# Extract R's calculated interval
+r_interval <- aus_forecast |>
+  hilo(level = 95) |>
+  filter(row_number() == 1) |>
+  unpack_hilo("95%")
+
+cat("R's 95% PI: [", r_interval$`95%_lower`, ", ", r_interval$`95%_upper`, "]\n")
+```
+
+Interpretation:
+
+Alpha: The model is stable, favoring long-term history over recent fluctuations.
+
+Point Forecast: The forecast is a flat line at 95,186.56 because the model assumes no trend.
+
+Initial State: The series is estimated to have started at a baseline level of 100,647.
+
+Interval Match: Your manual calculation and R's results are nearly identical for the first month.
+
+Precision Gap: Small differences exist because R uses a precise multiplier and optimized error values.
+
+While the prediction is flat, the fan of uncertainty widens the further you look ahead.
+
+### 8.5 Data set global_economy contains the annual Exports from many countries. Select one country to analyse.
+
+### a. Plot the Exports series and discuss the main features of the data.
+
+**Filtering for Australia and plotting**
+
+```{r}
+library(fpp3)
+
+# Filtering for Australia and plotting
+aus_exports <- global_economy |>
+  filter(Country == "Australia")
+aus_exports
+
+aus_exports |>
+  autoplot(Exports) +
+  labs(title = "Annual Exports for Australia",
+       y = "% of GDP", x = "Year")
+```
+Overall Trend: The data shows a clear, long-term upward trajectory, indicating exports are taking up a larger share of the economy over time.
+
+Cyclicality: Visible cycles appear throughout the decades
+
+Seasonality: There is no seasonality to analyze because the data is recorded on an annual basis.
+
+Structural Shift: A sharp acceleration in growth is evident starting in the 1980s and peaking after 2000.
+
+**b. Use an ETS(A,N,N) model to forecast the series, and plot the forecasts.**    
+
+```{r}
+library(fpp3)
+# Filtering the data for Australia
+aus_exports <- global_economy |>
+  filter(Country == "Australia")
+
+# Fitting the ETS(A,N,N) model
+aus_exports_fit <- aus_exports |>
+  model(ANN = ETS(Exports ~ error("A") + trend("N") + season("N")))
+
+report(aus_exports_fit)
+```
+
+```{r}
+components(aus_exports_fit) |> autoplot()
+```
+**Now we left Join the fitted values to the components**
+
+```{r}
+components(aus_exports_fit) |>
+  left_join(fitted(aus_exports_fit), by = c("Country", ".model", "Year"))
+```
+
+**Generating forecasts for the next 10 years**
+
+```{r}
+ 
+aus_exports_forecast <- aus_exports_fit |>
+  forecast(h = 10)
+aus_exports_forecast
+
+# Plotting the forecasts alongside historical data
+aus_exports_forecast |>
+  autoplot(aus_exports) +
+  labs(title = "Australia Exports Forecast Using ETS(A,N,N) Model",
+       y = "% of GDP", x = "Year")
+```
+Interpretation
+
+The predicted exports remain at a constant horizontal level because the model assumes no trend.
+
+The forecast starts from the last estimated level, essentially freezing the most recent smoothed value into the future.
+
+The shaded intervals widen as time progresses, reflecting increasing uncertainty.
+
+Model Limitation: This model ignores the clear historical upward trend, acting as a simple baseline rather than a growth predictor.
+
+
+### c. Compute the RMSE values for the training data.
+
+**calculating the Root Mean Squared Error (RMSE) - accuracy metrics for the training data**
+
+```{r}
+tidy(aus_exports_fit) # esimates
+accuracy(aus_exports_fit) # accuracy metrics
+```
+
+Interpretation of the SES model's performance on the Australian exports data:
+
+RMSE (1.15): On average, the model's predictions deviate from the actual export values by 1.15 percentage points of the GDP.
+
+MAE (0.91): The "Mean Absolute Error" shows that the typical error is slightly smaller than the RMSE, suggesting there are few extreme outliers in the data.
+
+MAPE (5.41%): The model is off by an average of 5.41% relative to the actual export values, which is generally considered a very accurate fit for macroeconomic data.
+
+MASE (0.93): Since this value is less than 1, the SES model is performing better than a standard "Naive" benchmark (which simply uses the previous year's value as the forecast).
+
+### d. Compare the results to those from an ETS(A,A,N) model. (Remember that the trended model is using one more parameter than the simpler model.) Discuss the merits of the two forecasting methods for this data set.
+
+**Now evaluate whether adding a trend component improves the model.**
+
+```{r}
+
+# Filtering the data for Australia
+aus_exports <- global_economy |>
+  filter(Country == "Australia")
+
+# Fit both SES (A,N,N) and Holt's Linear Trend (A,A,N)
+aus_exports_comparison_fit <- aus_exports |>
+  model(
+    SES_ANN = ETS(Exports ~ error("A") + trend("N") + season("N")),
+    Holt_AAN = ETS(Exports ~ error("A") + trend("A") + season("N"))
+  )
+report(aus_exports_comparison_fit)
+```
+```{r}
+tidy(aus_exports_comparison_fit) # esimates
+accuracy(aus_exports_comparison_fit) # accuracy metrics
+```
+**Accuracy Comparison (RMSE & MAE)**
+
+Holt_AAN has a lower RMSE (1.117) compared to SES_ANN (1.147).
+
+Holt_AAN also shows a lower MAE (0.893) than SES_ANN (0.914).
+
+The trended model (Holt_AAN) fits the historical training data more accurately because it accounts for the upward trajectory of Australia's exports.
+
+Complexity and Selection (AICc)
+
+SES_ANN has a lower AICc (257.84) compared to Holt_AAN (259.47).
+
+Although the Holt model is more accurate, the AICc suggests that the improvement in fit is not quite large enough to offset the penalty for adding an extra parameter (the trend).
+
+Even though the SES model is slightly less accurate, its lower AICc makes it the preferred choice because it is simpler and avoids unnecessary complexity.
+
+### e. Compare the forecasts from both methods. Which do you think is best?
+
+```{r}
+# Generating forecasts for the next 10 years
+aus_exports_comparison_forecast <- aus_exports_comparison_fit |>
+  forecast(h = 10)
+aus_exports_comparison_forecast
+
+```
+
+**Visualize the Forecasts**
+
+```{r}
+aus_exports_comparison_fit |>
+  forecast(h = 10) |>
+  autoplot(aus_exports, level = NULL) +
+  labs(title = "Australia Exports Comparison ANN vs. AAN Forecast",
+       y = "% of GDP")
+```
+**Model Comparison**
+
+The SES_ANN model produces a completely flat point forecast of 20.61% for the entire 10-year period, whereas the Holt_AAN model captures the historical growth by projecting a steady upward slope that reaches 22.07% by 2027.
+
+The Holt_AAN model fits the historical training data more closely, with a lower RMSE (1.116) and MAE (0.892) compared to the SES_ANN model's RMSE (1.146) and MAE (0.913).
+
+Despite the better fit, the SES_ANN model is statistically "preferred" by the AICc metric (257.84 vs 259.47) because it is simpler and uses one fewer parameter than the Holt model.
+
+The SES_ANN model shows much higher uncertainty over time, with the variance of the distribution increasing from 1.4 to 5.3, while the Holt_AAN model's variance remains tighter, growing only from 1.3 to 3.7.
+
+
+### f. Calculate a 95% prediction interval for the first forecast for each model, using the RMSE values and assuming normal errors. Compare your intervals with those produced using R.
+
+To calculate the prediction intervals manually, we use the formula for a 95% interval under the assumption of normality. This assumes that for the first forecast step (h=1), the standard deviation of the forecast distribution is approximately equal to the RMSE of the residuals.
+
+We calculate RMSE and first forecast values to calculate the lower and upper bounds manually.
+
+```{r}
+# Extract the point forecasts (.mean) for the first year (2018)
+# SES_ANN = 20.60716 and Holt_AAN = 20.83864
+first_forecasts <- aus_exports_comparison_forecast |>
+  filter(Year == 2018) |>
+  pull(.mean)
+
+# Extract RMSE values from previous accuracy test
+# SES_ANN = 1.146794, Holt_AAN = 1.116727
+rmse_values <- accuracy(aus_exports_comparison_fit)$RMSE
+
+# Manual Calculation: Point Forecast +/- (1.96 * RMSE)
+# We use 1.96 for a 95% confidence level under a Normal distribution
+manual_intervals <- tibble(
+  Model = c("SES_ANN", "Holt_AAN"),
+  Manual_Lower = first_forecasts - (1.96 * rmse_values),
+  Manual_Upper = first_forecasts + (1.96 * rmse_values)
+)
+
+manual_intervals
+```
+SES_ANN Interval: The model predicts with 95% confidence that 2018 exports will fall between 18.36% and 22.85% of GDP.
+
+Holt_AAN Interval: This model provides a slightly higher and tighter range, estimating between 18.65% and 23.03% of GDP.
+
+The Holt_AAN interval is narrower because its lower RMSE indicates a more precise fit to the historical data.
+
+Both intervals are centered around their respective point forecasts (20.61 for SES vs. 20.84 for Holt), showing how the trend component shifts the entire range upward.
+
+### Intervals Using R### 
+
+```{r}
+
+r_intervals <- aus_exports_comparison_forecast |>
+  filter(Year == 2018) |>
+  hilo(level = 95) |>
+  unpack_hilo("95%") |>
+  select(.model, Year, .mean, `95%_lower`, `95%_upper`)
+
+r_intervals
+```
+Manual calculations are very similar to the R results.
+
+R Intervals are Wider: R produces slightly wider intervals than my manual calculation.
+
+RMSE vs Variance: This happens because R uses residual variance and accounts for estimated parameters, 
+while I used a simple training RMSE.Normal Distribution: Both methods rely on the same assumption that errors follow a normal distribution.
+
+Both results show the Holt_AAN model has a tighter, more certain range than the SES_ANN model.
+
+### 8.6 Forecast the Chinese GDP from the global_economy data set using an ETS model. Experiment with the various options in the ETS() function to see how much the forecasts change with damped trend, or with a Box-Cox transformation. Try to develop an intuition of what each is doing to the forecasts.
+
+**Prepare China GDP data**
+
+```{r}
+library(fpp3)
+
+china_gdp <- global_economy |>
+  filter(Country == "China")
+```
+
+**Experiment with different ETS models**
+
+```{r}
+china_fit <- china_gdp |>
+  model(
+    # Simple Automatic Selection
+    auto = ETS(GDP),
+    # Damped Trend (Ad) to prevent "infinite" growth projection
+    damped = ETS(GDP ~ error("A") + trend("Ad") + season("N")),
+    # Box-Cox transformation to stabilize variance
+    box_cox = ETS(box_cox(GDP, 0.2) ~ error("A") + trend("A") + season("N"))
+  )
+
+report(china_fit)
+```
+
+**Generating 20-year forecasts and Plotting to Compare**
+
+```{r}
+china_fc <- china_fit |> 
+  forecast(h = "20 years")
+
+# Plot the results to compare intuition
+china_fc |>
+  autoplot(china_gdp, level = NULL) +
+  labs(title = "Chinese GDP Forecast ETS Variations",
+       y = "GDP (current US$)")
+```
+Auto Model: This model automatically identifies the increasing variance in China's growth, leading to an aggressive and slightly exponential forecast that follows the recent sharp upward trend.
+
+Damped Model: This bends the trend line downward, providing a more conservative forecast by assuming that the explosive growth seen in the past will eventually slow down.
+
+Box-Cox Model: By transforming the scale of the data, this model stabilizes the variance, resulting in an even more aggressive forecast than the Auto model as it interprets the historical growth as a strong, persistent signal. 
+
+Model Selection (AICc): The Box-Cox model has a significantly lower AICc (589.15) compared to the Auto or Damped models, indicating it is the most statistically efficient way to handle this specific type of rapid economic growth.
+
+### 8.7 Find an ETS model for the Gas data from aus_production and forecast the next few years. Why is multiplicative seasonality necessary here? Experiment with making the trend damped. Does it improve the forecasts?
+
+**Prepare the Gas data**
+
+```{r}
+gas_data <- aus_production |>
+  select(Gas) |>
+  filter(!is.na(Gas))
+```
+
+**Fit models: Automatic (Multiplicative) vs. Damped**
+
+```{r}
+
+gas_fit <- gas_data |>
+  model(
+    auto = ETS(Gas),
+    damped = ETS(Gas ~ error("M") + trend("Ad") + season("M"))
+  )
+report(gas_fit)
+```
+
+**Forecast for the next 5 years (20 quarters)**
+
+```{r}
+
+gas_fc <- gas_fit |>
+  forecast(h = 20)
+
+# Compare results
+gas_fc |>
+  autoplot(gas_data, level = NULL) +
+  labs(title = "Australian Gas Production ETS Forecasts",
+       y = "Petajoules")
+```
+**Why Multiplicative Seasonality is Necessary:**
+
+The seasonal swings in the gas data get larger as the production level increases over time.
+
+Multiplicative seasonality is necessary because the seasonal pattern is not constant; it changes in proportion to the level of the series.
+
+Using multiplicative seasonality allows the model to track these growing seasonal variations more accurately than an additive model could.
+
+**Damped Trend Experiment Results:**
+
+Statistical Preference: The auto model is better because its AICc (1681.79) is lower than the damped model's (1685.09).
+
+Better Accuracy: The auto model is more precise, with a smaller MAE (0.0413) compared to the damped model (0.0417).
+
+Auto Model Intuition: This model predicts that the current strong upward trend in gas production will keep going at the same speed.
+
+Damped Model Intuition: This model "bends" the forecast line down, assuming the growth will eventually level off.
+
+Final Verdict: Adding a damped trend does not improve the forecast since the standard model is both more accurate and statistically favored.
+
+### 8.8 Recall your retail time series data (from Exercise 7 in Section 2.10).
+
+### a. Why is multiplicative seasonality necessary for this series?
+
+```{r}
+library(fpp3)
+
+# Selecting unique retail series
+set.seed(12345678)
+myseries <- aus_retail |>
+  filter(`Series ID` == sample(aus_retail$`Series ID`, 1))
+
+# Plotting the data to inspect seasonal swings
+myseries |>
+  autoplot(Turnover) +
+  labs(title = "Retail Turnover",
+       y = "Turnover ($Millions)")
+
+# Fit an Automatic ETS model
+# R will likely choose a model with Multiplicative seasonality (M)
+retail_fit <- myseries |>
+  model(ets_auto = ETS(Turnover))
+
+# View the chosen model components
+report(retail_fit)
+```
+
+**Why Multiplicative Seasonality is Necessary**
+
+In your retail data, the size of the seasonal fluctuations, the peaks and drop grows as the overall trend increases.
+
+The December spending spikes are not a constant dollar amount; instead, they represent a percentage of the total turnover, which rises over time.
+
+Multiplicative seasonality treats the seasonal component as a ratio, which effectively stabilizes the seasonal pattern across different levels of sales.
+
+Plot shows a wider shape at he end because the seasonal swings get larger as the sales numbers grow.
+
+### b. Apply Holt-Winters’ multiplicative method to the data. Experiment with making the trend damped.
+
+**Holt-Winters Multiplicative Experiments**
+
+```{r}
+retail_comparison_fit <- myseries |>
+  model(
+    `Holt-Winters Multi` = ETS(Turnover ~ error("M") + trend("A") + season("M")),
+    `Damped Multi` = ETS(Turnover ~ error("M") + trend("Ad") + season("M"))
+  )
+
+report(retail_comparison_fit)
+```
+
+**Compare the model parameters and metrics**
+
+```{r}
+retail_comparison_fit |> report()
+retail_comparison_fit |> accuracy()
+```
+**Forecast and Plot**
+
+```{r}
+retail_comparison_fit |>
+  forecast(h = "2 years") |>
+  autoplot(myseries, level = NULL) +
+  labs(title = "Holt-Winters Multiplicative - Standard vs. Damped",
+       y = "Turnover")
+```
+**Experimenting with Damped Trend Bending:** 
+
+The standard Holt-Winters method assumes the current trend will continue in a straight line forever, while the Damped model bends the trend into a flat line over time.
+
+Check the AICc in your report(); if the Damped model has a lower value, the extra complexity of the damping parameter is worth it.
+
+Damped trends are often more accurate for long-term retail forecasts because they prevent over-optimistic projections of infinite growth.
+
+In the Damped model, you will see a new parameter called phi
+if phi is significantly less than 1 e.g., 0.85, the model is aggressively slowing down the projected growth.
+
+### c. Compare the RMSE of the one-step forecasts from the two methods. Which do you prefer?
+
+```{r}
+retail_comparison_fit |> 
+  tidy()
+retail_comparison_fit |> 
+  accuracy()
+```
+**Model Preference**
+
+The Holt-Winters Multi model has a slightly lower RMSE (0.613) than the Damped Multi model (0.616).
+
+There is only a very tiny difference of 0.002 between the two models, meaning they fit the training data almost exactly the same.
+
+The Damped Multi model has a lower MAE (0.444) and MAPE (5.06%), suggesting its average errors are slightly smaller.
+
+Even though the Damped model has a better MAE, the Holt-Winters Multi model is usually preferred when it has the lowest RMSE and fewer parameters.
+
+I prefer the Holt-Winters Multi model because it is simpler and provides the most accurate fit for this specific series.
+
+### d. Check that the residuals from the best method look like white noise.
+
+To confirm if the preferred Holt-Winters Multiplicative model has captured all the available information in your retail series, we will examine the residuals
+
+**Residual Analysis**
+
+```{r}
+
+retail_comparison_fit |>
+  select(`Holt-Winters Multi`) |>
+  gg_tsresiduals()
+```
+The top plot shows that the residuals are scattered randomly around zero with no clear patterns or trends remaining.
+
+The histogram is shaped like a bell curve and centered at zero, which confirms that the errors follow a normal distribution.
+
+In the ACF plot, almost all bars are within the blue dashed lines, meaning the model has successfully captured the seasonal patterns.
+
+There is one small spike at lag 12 that pokes slightly above the line, but it is minor enough that the residuals can still be considered white noise.
+
+Since these residuals look clean, you can trust that the prediction intervals for your retail forecast are accurate.
+
+### e. Now find the test set RMSE, while training the model to the end of 2010. Can you beat the seasonal naïve approach from Exercise 7 in Section 5.11?
+
+```{r}
+library(fpp3)
+
+# Training ends in Dec 2010
+myseries_train <- myseries |>
+  filter(year(Month) <= 2010)
+
+# Fit both models to the training data
+# We specify Holt-Winters Multiplicative (M,A,M)
+fit_comparison <- myseries_train |>
+  model(
+    `Holt-Winters Multi` = ETS(Turnover ~ error("M") + trend("A") + season("M")),
+    `SNAIVE` = SNAIVE(Turnover)
+  )
+
+# Forecast over the test set period 
+# R automatically knows the length of the test set from myseries
+fc_comparison <- fit_comparison |>
+  forecast(new_data = anti_join(myseries, myseries_train, by = "Month"))
+
+# Compare accuracy on the test set
+test_accuracy <- fc_comparison |>
+  accuracy(myseries)
+
+test_accuracy
+```
+The Seasonal Naive approach actually better here because its MASE is 1.00, while your other models are both higher (around 1.35 and 1.74).
+
+Neither the Holt-Winters nor the other model managed to beat the simple baseline on this specific test set.
+
+he model with the lower RMSE (1.55) is your best performer among the complex models, but it still falls short of the seasonal naive benchmark.
+
+With a MAPE of 9.06%, your best model is off by nearly double the error margin of a typical winning forecast for this type of data.
+
+In this specific case, you cannot beat the seasonal naive approach; the simple method of repeating last year's numbers is more accurate for this period.
+
+### 8.9 For the same retail data, try an STL decomposition applied to the Box-Cox transformed series, followed by ETS on the seasonally adjusted data. How does that compare with your best previous forecasts on the test set?
+
+```{r}
+library(fpp3)
+
+# Select the series
+set.seed(12345678)
+myseries <- aus_retail |>
+  filter(`Series ID` == sample(aus_retail$`Series ID`, 1))
+
+# Split data: Training ends Dec 2010
+myseries_train <- myseries |>
+  filter(year(Month) <= 2010)
+
+# Fit the hybrid model: Box-Cox -> STL -> ETS
+# Note: season("N") is used because STL already removed seasonality
+fit_hybrid <- myseries_train |>
+  model(
+    `STL-ETS Box-Cox` = decomposition_model(
+      STL(box_cox(Turnover, 0.21) ~ season(window = "periodic")),
+      ETS(season_adjust ~ error("A") + trend("A") + season("N"))
+    ),
+    `Holt-Winters Multi` = ETS(Turnover ~ error("M") + trend("A") + season("M")),
+    `SNAIVE` = SNAIVE(Turnover)
+  )
+
+# Evaluate on the test set
+fit_hybrid |>
+  forecast(new_data = anti_join(myseries, myseries_train, by = "Month")) |>
+  accuracy(myseries)
+```
+
+The SNAIVE (Seasonal Naive) approach is the best performer because it has the lowest RMSE (1.55) and MAPE (9.06%).
+
+All three models have a MASE greater than 1.0, meaning that for this specific test period, none of these models are actually better than a simple naive forecast.
+
+The STL-ETS Box-Cox model performed the worst on the test set, with a much higher RMSE (4.29) and MAPE (29.80%).
+
+Both the Holt-Winters and STL-ETS models have negative ME values (Mean Error), which means they are consistently forecasting numbers that are too low compared to the actual retail sales.
+
+In this specific case, the simple "repeat last year's values" method (SNAIVE) is more accurate than the complex ETS and Box-Cox combinations.
