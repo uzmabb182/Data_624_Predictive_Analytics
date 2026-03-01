@@ -58,7 +58,7 @@ It has upward trend
 # Model Specification & Estimation
 
 Model function captures the time trend
-Each country has a row form time series linear model.
+Each country has a row for time series linear model.
 Piping a table into a model gives mable
 
 ```{r}
@@ -81,7 +81,7 @@ fit |> forecast(h = "3 years")
 
 ```
 
-# Now Visualizing and Evaluate Forecast
+# Now Visualizing and Evaluating Forecast
 
 ```{r}
 fit |> 
@@ -189,7 +189,7 @@ The “residuals” in a time series model are what is left over after fitting a
 Difference between observed value and fitted value
 
 # Assumptions for Residuals:
-Residuals are uncorrelated. If they are not, then the information left in residuals should be used in computin forecasts.
+Residuals are uncorrelated. If they are not, then the information left in residuals should be used in computing forecasts.
 Residuals have mean zero. I they don't then forecasts are biased.
 
 Useful Properties: 
@@ -461,9 +461,7 @@ print_retail |>
 # Mathematical Adjustment
 If the data show different variation at different levels of the series, then a transformation can be useful
 
-```{r}
 
-```
 ```{r}
 food <-aus_retail |>
   filter(Industry ==  "Food retailing") |>
@@ -483,6 +481,7 @@ food |>
     x = "Month"
   )
 ```
+
 
 ```{r}
 # litter more even variation 
@@ -505,6 +504,7 @@ food |> autoplot(log(Turnover)) +
 food |> autoplot(-1/Turnover) +
   labs(y = "Inverse turnover")
 ```
+
 # Box Cox Transformation
 Each of these transformations can be thought of in a continuous scale of transformations which are known as Box Cox transformations. 
 Lamda describe how strong transformation is
@@ -567,7 +567,7 @@ Additive Decomposition: y =S+T+R
 Multiplicative Decomposition: y = SX T X R
 
 ```{r}
-us_retail_employment
+us_employment
 ```
 
 ```{r}
@@ -672,7 +672,7 @@ aus_exports |>
   labs(y = "% of GDP",
        title = "Total Australian exports")
 ```
-Moving averages of moving averages
+Moving averages of averages
 
 ```{r}
 beer <- aus_production |>
