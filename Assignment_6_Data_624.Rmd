@@ -838,3 +838,168 @@ The forecast line curves upward like a parabola instead of following a straight 
 Also, because the model already uses double differencing, the constant acts as an acceleration term.
 
 This causes the predicted passenger count to increase by a larger amount every year, leading to a much more aggressive projection.
+
+### 9.8. For the United States GDP series (from global_economy):
+### a. if necessary, find a suitable Box-Cox transformation for the data;
+```{r}
+library(fpp3)
+
+# Filtering for United States and find the optimal lambda
+us_economy <- global_economy |>
+  filter(Country == "United States")
+
+lambda <- us_economy |>
+  features(GDP, features = guerrero) |>
+  pull(lambda_guerrero)
+
+# Viewing the value
+lambda
+```
+
+A lambda of 0.28 is close to 0.25 (a fourth-root transformation) or 0 (a log transformation).
+
+As the GDP grows larger over time, the fluctuations also tend to get bigger.
+
+**Transformation and Plotting**
+Apply the transformation using the lambda found previously (0.28)
+
+```{r}
+us_economy |>
+  autoplot(box_cox(GDP, 0.2819443)) +
+  labs(title = "United States GDP with Box-Cox Transformation",
+       subtitle = "Lambda = 0.28",
+       y = "Transformed GDP Value")
+```
+The original data showed larger fluctuations as GDP increased over time.
+
+This transformation makes those wiggles a consistent size across the entire timeline.
+
+Stabilizing the variance allows an ARIMA model to identify patterns more effectively without being distracted by growing noise.
+
+### b. fit a suitable ARIMA model to the transformed data using ARIMA();
+
+```{r}
+library(fpp3)
+
+# Fitting the automated ARIMA model to the transformed data
+fit <- global_economy |>
+  filter(Country == "United States") |>
+  model(arima_model = ARIMA(box_cox(GDP, 0.2819443)))
+
+# Display the selected model and coefficients
+report(fit)
+```
+The ARIMA(1,1,0) with drift model:
+
+The Box-Cox transformation ensures that historical economic fluctuations are weighted equally with modern ones.
+
+The AR(1) term shows that this year's economic growth is directly influenced by the previous year's performance.
+
+By using one level of differencing (d=1), the model analyzes the annual change in GDP rather than the total amount.
+
+The drift term acts as a constant upward force, reflecting the long-term expansion of the U.S. economy.
+
+### c. try some other plausible models by experimenting with the orders chosen;
+
+ARIMA(0,1,1) with Drift: This replaces the memory of last year's growth with a correction based on last year's forecast error.
+
+ARIMA(1,1,1) with Drift: This combines both the previous year's performance and the previous error for a more complex memory.
+
+ARIMA(0,2,1): This uses double differencing (like your earlier air passenger model) to see if the growth rate itself is changing over time.
+
+```{r}
+fit_others <- global_economy |>
+  filter(Country == "United States") |>
+  model(
+    auto = ARIMA(box_cox(GDP, 0.2819443)),
+    ma1 = ARIMA(box_cox(GDP, 0.2819443) ~ 1 + pdq(0,1,1)),
+    mixed = ARIMA(box_cox(GDP, 0.2819443) ~ 1 + pdq(1,1,1)),
+    double_diff = ARIMA(box_cox(GDP, 0.2819443) ~ pdq(0,2,1))
+  )
+
+# Compare the AICc - lower is better
+glance(fit_others) |> arrange(AICc)
+```
+The double_diff model (ARIMA(0,2,1)) is the best choice because it has the lowest AICc (650.07).
+
+Comparison: It outperforms the original auto model (AICc = 657.10) by a significant margin.
+
+Using two levels of differencing (d=2) fits the historical U.S. GDP data better than the single difference model originally selected by the automated process.
+
+### d. choose what you think is the best model and check the residual diagnostics;
+
+```{r}
+# Fitting the chosen best model
+fit_best <- global_economy |>
+  filter(Country == "United States") |>
+  model(best_model = ARIMA(box_cox(GDP, 0.2819443) ~ pdq(0,2,1)))
+
+#  Checking visual diagnostics (ACF and Histogram)
+fit_best |> gg_tsresiduals()
+
+# Performing the Ljung-Box test for formal confirmation
+fit_best |>
+  augment() |>
+  features(.innov, ljung_box, lag = 10, dof = 1)
+```
+The ARIMA(0,2,1) model is a strong fit for the United States GDP data based on your diagnostics:
+
+Ljung-Box Test: The p-value of 0.404 is well above 0.05, confirming the residuals are essentially white noise.
+
+ACF Plot: All autocorrelation bars remain within the blue significance limits, showing no remaining patterns in the errors.
+
+Residuals: The innovation plot shows random fluctuations around zero, though it clearly captures the 2008-2009 recession as a significant outlier.
+
+Distribution: The histogram is roughly bell-shaped, indicating the model's errors are nearly normally distributed.
+
+### e. produce forecasts of your fitted model. Do the forecasts look reasonable?
+
+```{r}
+# Generating 10-year forecasts using the chosen best_model
+forecasts <- fit_best |>
+  forecast(h = 10)
+
+# Plotting the forecasts alongside the historical data
+forecasts |>
+  autoplot(us_economy) +
+  labs(title = "10-Year GDP Forecast for the United States",
+       subtitle = "Model ARIMA(0,2,1) with Box-Cox Transformation",
+       y = "GDP (USD)")
+```
+The forecasts for the United States GDP produced by ARIMA(0,2,1) model are highly reasonable.
+
+The forecast follows the historically strong upward trajectory of the U.S. economy without being overly aggressive.
+
+lambda = 0.28 transformation, the model predicts growth that is consistent with the stabilized variance of the past 60 years.
+
+The blue shaded intervals expand naturally, showing that while the trend is likely to continue, the range of possible outcomes grows wider the further into the future we look.
+
+### f. compare the results with what you would obtain using ETS() (with no transformation).
+
+comparing your ARIMA(0,2,1) results with an ETS model
+
+```{r}
+# Fitting both models: your best ARIMA and an automated ETS
+fit_comparison <- global_economy |>
+  filter(Country == "United States") |>
+  model(
+    best_arima = ARIMA(box_cox(GDP, 0.2819443) ~ pdq(0,2,1)),
+    ets_auto = ETS(GDP)
+  )
+
+# 2. Generating 10-year forecasts
+fit_comparison |>
+  forecast(h = 10) |>
+  autoplot(global_economy |> filter(Country == "United States"), level = NULL) +
+  labs(title = "ARIMA vs. ETS Forecast: United States GDP",
+       y = "GDP (USD)")
+```
+
+Both models project continued growth, but the ARIMA(0,2,1) model (red line) is more aggressive, curving upward more steeply than the ETS model (teal line).
+
+The ARIMA model uses double differencing to capture accelerating momentum, while the ETS model typically uses additive or multiplicative trends to follow the historical average more linearly.
+
+ARIMA relies on your manual Box-Cox transformation (lambda approx 0.28$) to stabilize the wiggles in the data, whereas ETS often handles this automatically through its internal multiplicative error structure.
+
+Since the ARIMA(0,2,1) model achieved a lower AICc (650.07) and passed the Ljung-Box test, it is statistically the more precise fit for this specific historical growth pattern.
+
