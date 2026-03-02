@@ -6,20 +6,22 @@ output:
   html_document:
     toc: true
     toc_float: true
+  word_document:
+    toc: true
 ---
 
 ### Exercise 3.1 (a) Visualizing Distributions and Relationships
 
 To understand the individual distributions of the nine predictors and the relationships between them, histograms and a correlation matrix are utilized.
 
-```{r message=FALSE}
+```{r warning=FALSE}
 library(mlbench)
 library(tidyverse)
 library(corrplot)
 
 data(Glass)
 
-# 1. Visualizing Distributions (Histograms)
+# Visualizing Distributions (Histograms)
 Glass %>%
   pivot_longer(cols = RI:Fe, names_to = "Predictor", values_to = "Value") %>%
   ggplot(aes(x = Value)) +
@@ -27,7 +29,7 @@ Glass %>%
   facet_wrap(~ Predictor, scales = "free") +
   labs(title = "Distributions of Glass Predictors")
 
-# 2. Visualizing Relationships (Correlation Matrix)
+# Visualizing Relationships (Correlation Matrix)
 cor_matrix <- cor(Glass[, 1:9])
 corrplot(cor_matrix, method = "color", type = "upper", 
          addCoef.col = "black", number.cexs = 0.7)
@@ -88,13 +90,13 @@ library(naniar) # Helpful for missing data visualization
 data(Soybean)
 
 # Identify the number of missing values per class
-Soybean %>%
-  group_by(Class) %>%
+Soybean |>
+  group_by(Class) |>
   summarise(
     total_obs = n(),
     missing_values = sum(is.na(across(everything()))),
     pct_missing = (missing_values / (total_obs * ncol(Soybean))) * 100
-  ) %>%
+  ) |>
   arrange(desc(pct_missing))
 ```
 **Summary of Findings for Soybean Data**
@@ -125,7 +127,7 @@ Very sparse categories: Some categories appear only a few times.Can cause unstab
 table(Soybean$date)
 
 # for all predictors:
-lapply(Soybean, table)
+#lapply(Soybean, table)
 
 ```
 **Check for Zero / Near-Zero Variance (Using caret)**
@@ -161,7 +163,7 @@ mean(is.na(Soybean)) * 100
 colMeans(is.na(Soybean)) * 100
 
 # Sorting them
-sort(colMeans(is.na(Soybean)) * 100, decreasing = TRUE)
+#sort(colMeans(is.na(Soybean)) * 100, decreasing = TRUE)
 
 ```
 
@@ -209,12 +211,12 @@ Deleting these observations would systematically remove nearly all examples of c
 # Load the necessary library
 library(caret)
 
-# Identify and remove Near-Zero Variance (NZV) predictors
+# Identifying and remove Near-Zero Variance (NZV) predictors
 # This removes uninformative variables that could crash certain models
 nzv_metrics <- nearZeroVar(Soybean, saveMetrics = TRUE)
 soy_filtered <- Soybean[, !nzv_metrics$nzv]
 
-# Prepare for Imputation
+# Preparing for Imputation
 # Since most predictors are factors, they must be converted to dummy variables 
 # to allow for numerical imputation methods like KNN
 soy_dummy_model <- dummyVars(Class ~ ., data = soy_filtered)
