@@ -8,7 +8,13 @@ output:
     toc_float: true
 ---
 
-```{r}
+# Load Dataset
 
+```{r warning=FALSE}
+
+
+url <- "https://raw.githubusercontent.com/uzmabb182/Data_622/refs/heads/main/Assignment_1_EDA/bank-additional-full.csv"
+bank_additional_df <- read.csv2(url, stringsAsFactors = FALSE)
+head(bank_additional_df)
 ```
 
