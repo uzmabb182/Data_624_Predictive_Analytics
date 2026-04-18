@@ -1,0 +1,245 @@
+---
+title: "Project_1_Data_624_Part_A"
+author: "Mubashira Qari"
+date: "2026-03-01"
+output:
+  word_document:
+    toc: true
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+# Load Dataset and Find Summary of NA
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+library(fpp3)
+library(naniar) # Excellent for visualizing missingness
+
+# 2. Read the raw data
+url <- "https://raw.githubusercontent.com/uzmabb182/Data_624_Predictive_Analytics/refs/heads/main/ATM624Data.csv"
+atm_df <- read_csv(url)
+
+#view(atm_df)
+
+# Summary of missing values by column
+cat("--- Count of NAs per Column ---\n")
+print(colSums(is.na(atm_df)))
+```
+# Date Parsing and Cleaning
+
+```{r}
+# --- Step 2.1: Fixing Date Formats and Filtering ---
+
+library(tidyverse)
+library(fpp3)
+library(lubridate)
+
+# 1. Parse the complex date string and remove trailing empty rows
+atm_ts <- atm_df |>
+  dplyr::mutate(
+    # mdy_hms handles the "6/13/2009 12:00:00 AM" format
+    DATE_clean = lubridate::mdy_hms(DATE) |> as_date()
+  ) |>
+  # Remove the 14 rows where ATM is NA (the trailing May 2010 rows)
+  dplyr::filter(!is.na(ATM)) |> 
+  dplyr::select(DATE = DATE_clean, ATM, Cash) |>
+  # Convert to tsibble: DATE is the index, ATM is the key
+  as_tsibble(index = DATE, key = ATM)
+
+# 2. Verify the count of ATMs and that the date range is correct
+atm_ts |> 
+  as_tibble() |> 
+  group_by(ATM) |> 
+  summarise(Start = min(DATE), End = max(DATE), Rows = n())
+
+```
+# Imputation by Interpolation
+
+We will use a Time Series Linear Model (TSLM) with trend and seasonality to estimate what those missing values should have been. 
+This is a more robust technique than simple averages because it accounts for the"weekly pattern of ATM withdrawals.
+
+```{r}
+# --- Step 2.2: Imputing Historical Gaps ---
+
+# Apply interpolation using a Time Series Linear Model (TSLM)
+# This uses the trend and seasonal patterns to fill the NAs
+atm_final <- atm_ts |>
+  fill_gaps() |>
+  model(imputer = TSLM(Cash ~ trend() + season())) |>
+  interpolate(atm_ts)
+
+# Confirm that all 1,460 rows (365 days * 4 ATMs) now have Cash values
+atm_final |> 
+  as_tibble() |> 
+  summarise(Total_NAs = sum(is.na(Cash))) |> 
+  print()
+
+# View the 5 rows that were specifically filled for June 2009
+atm_final |> 
+  filter(year(DATE) == 2009, month(DATE) == 6, is.na(Cash) == FALSE) |> 
+  # We join with the original to see which ones changed
+  anti_join(as_tibble(atm_ts), by = c("DATE", "ATM", "Cash")) |> 
+  print()
+```
+
+# Exploratory Data Analysis (EDA)
+# Visualizing Time Series and Seasonality
+
+```{r}
+# --- Step 3: Exploratory Data Analysis (EDA) ---
+
+# Plot the time series for each ATM to identify trends and cycles
+atm_final |>
+  autoplot(Cash) +
+  facet_wrap(~ATM, scales = "free_y", ncol = 1) +
+  labs(title = "Daily ATM Cash Withdrawals",
+       subtitle = "May 2009 - April 2010",
+       y = "Cash (Hundreds of dollars)") +
+  theme_minimal()
+```
+
+Looking at the plot, each ATM has a very different behavior. 
+Now we need to address these unique behaviors before we can model them effectively.
+
+# Interpretation of the ATMs
+ATM1 & ATM2: Both show a very clear, stable weekly seasonality (a 7-day cycle) with a relatively flat trend. This suggests that a Seasonal Naive (SNAIVE) model or a seasonal ETS or ARIMA model will perform well here.
+
+ATM3: This is a special case. It has zero values for almost the entire year, with data only appearing in the final few days. 
+Because there is no historical pattern to learn from, the most sensible forecast is a Naive approach or a simple mean based on those few active days.
+
+ATM4: There is a massive outlier in early 2010 where cash withdrawals spike to nearly 10,000 (hundreds of dollars). 
+And, such an extreme value will skew your model's mean and variance.
+
+# Outlier Treatment for ATM4
+we must clean the outlier in ATM4. If we leave it, the forecast for May 2010 will be unnaturally high.
+
+We will use the simple replacement with the median/mean to bring that spike down to a reasonable level.
+
+```{r}
+# --- Step 4: Handling the ATM4 Outlier ---
+
+# Identify the extreme outlier in ATM4
+# We'll replace any value over 5000 with the median for that ATM
+# This is a standard pre-processing step from Applied Predictive Modeling
+atm_final <- atm_final |>
+  dplyr::mutate(Cash = ifelse(ATM == "ATM4" & Cash > 5000, median(Cash, na.rm = TRUE), Cash))
+
+# Re-visualize ATM4 to ensure the scale is now readable
+atm_final |>
+  filter(ATM == "ATM4") |>
+  autoplot(Cash) +
+  labs(title = "ATM4: After Outlier Treatment",
+       y = "Cash (Hundreds of dollars)")
+```
+ATM4: Now that the extreme outlier is removed, we can see a much more unpredictable behavior, high-variance series compared to ATM1 and ATM2. It has some seasonality but is far more noisy. An ARIMA model is often better at handling this kind of random behavior.
+
+# Model Specification and Training
+
+The next step is to define multiple models for each ATM.
+
+```{r}
+# --- Step 5: Model Training ---
+
+# We fit a variety of models to each ATM:
+# ETS: Automatically handles trend and seasonality (Hyndman Ch 8)
+# ARIMA: Automatically handles complex correlations (Hyndman Ch 9)
+# SNAIVE: A benchmark that simply repeats the last week's values (Hyndman Ch 5)
+
+atm_models <- atm_final |>
+  model(
+    ets = ETS(Cash),
+    arima = ARIMA(Cash),
+    snaive = SNAIVE(Cash)
+  )
+
+# Display the trained model table
+atm_models
+```
+```{r}
+# --- Step 7.1: Augmented Data (List View) ---
+
+# Use augment to see the fitted values and residuals for every day
+atm_augmented <- atm_models |>
+  augment()
+
+# View the first 10 rows for ATM1's ARIMA model
+atm_augmented |>
+  dplyr::filter(ATM == "ATM1", .model == "arima") |>
+  dplyr::select(DATE, ATM, Cash, .fitted, .resid) |>
+  head(10) |>
+  print()
+
+# Check a specific date (like a Monday) to see if it captures the pattern
+# This gives you that "business feeling" of double-checking the model's logic
+atm_augmented |>
+  dplyr::filter(ATM == "ATM1", .model == "arima") |>
+  dplyr::slice(100:110) |> # Looking at a random slice in the middle
+  dplyr::select(DATE, ATM, Cash, .fitted)
+```
+
+the models have successfully captured the underlying rhythms of the data.
+
+# Generating the May 2010 Forecast
+In this step, we will use the forecast() function to predict the next 31 days (May 2010) for all four ATMs simultaneously. We will use a "h" (horizon) of 31 days.
+
+```{r}
+# --- Step 8: Generating the Forecast ---
+
+# Generate the forecast for the 31 days of May 2010
+# The forecast() function automatically applies the best model 
+# found in the previous steps for each ATM.
+atm_forecast <- atm_models |>
+  forecast(h = "31 days")
+
+# Visualize the forecast alongside the historical data
+# This plot will show the "confidence intervals" (the shaded areas)
+atm_forecast |>
+  autoplot(atm_final) +
+  facet_wrap(~ATM, scales = "free_y") +
+  labs(title = "ATM Cash Withdrawal Forecast: May 2010",
+       subtitle = "Forecasts include 80% and 95% confidence intervals",
+       y = "Cash (Hundreds)",
+       x = "Date") +
+  theme_minimal()
+```
+# Interpretation of Final Forecasts
+
+ATM1 & ATM2: Your forecast successfully continues the strong 7-day weekly cycles.
+
+ATM3: You will notice the forecast is essentially a flat line or a very simple trend because there were only a few days of data at the very end of April to learn from.
+
+ATM4: The forecast is less rhythmic than ATM1/ATM2, reflecting the high-variance noisy behavior we saw in the historical plots even after outlier treatment.
+
+# Exporting the Final Forecast
+
+The final step is to extract the numerical forecast values for May 2010 and save them into the Excel-readable format.
+
+Now we will filter for the best models and export the mean forecast values.
+
+```{r}
+# --- Step 9: Final Forecast Export ---
+
+# Extract the mean forecast values for May 2010
+# We select the '.mean' column which contains the actual forecast numbers
+final_forecast_values <- atm_forecast |>
+  dplyr::as_tibble() |>
+  dplyr::select(DATE, ATM, .model, .mean) |>
+  # pivotting this so it's easy to read in Excel: Days as rows, ATMs as columns
+  tidyr::pivot_wider(names_from = ATM, values_from = .mean)
+
+# View the first few days of the forecast
+head(final_forecast_values) |> 
+  print()
+
+# Save to your Downloads folder as an Excel-readable CSV
+submission_path <- "C:/Users/Uzma/Downloads/ATM_May2010_Forecast_Submission.csv"
+
+final_forecast_values |>
+  readr::write_csv(file = submission_path)
+
+cat("Success! May 2010 forecast:", submission_path)
+```
+

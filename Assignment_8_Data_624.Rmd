@@ -1,0 +1,619 @@
+---
+title: "Assignment_8_Data_624"
+author: "Mubashira Qari"
+date: "2026-04-12"
+output:
+  word_document:
+    toc: true
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+### 7.2. Friedman (1991) introduced several benchmark data sets create by simulation. One of these simulations used the following nonlinear equation to create data...
+
+Exercise 7.2 is a classic way to see how non-linear models handle noise. The Friedman simulation includes 10 predictors, but only X_1 through X_5 actually influence the outcome y. The rest are just distractions for the model.
+
+Creating a synthetic dataset where I use a mathematical formula to create the output Y based on specific inputs X.
+Generating random numbers, set.seed(200)
+Create 200 samples for training to teach the models and 5,000 samples for testing to see if the models actually learned.
+
+The equation only uses X1 through X5. The simulation will give us 10 variables X1 through X10. We make sure if the models in Chapter 7 are smart enough to ignore the 5 noise variables.
+
+**Prepare Data**
+
+Recreating the training and test sets
+
+```{r message=FALSE, warning=FALSE}  
+# Load the tools
+library(mlbench)
+library(caret)
+
+# Set seed for reproducibility
+set.seed(200)
+
+# Generating training data (200 samples)
+trainingData <- mlbench.friedman1(200, sd = 1)
+trainingData$x <- data.frame(trainingData$x)
+
+# Generating a large test set (5000 samples) to get a precise error rate
+testData <- mlbench.friedman1(5000, sd = 1)
+testData$x <- data.frame(testData$x)
+
+# 4. Quick look at the data
+head(trainingData$x)
+```
+
+Using the featurePlot function from the caret package creating a Scatterplot Matrix where every single predictor X1 through X10 is plotted against the outcome Y.
+
+```{r}
+# This creates a grid of scatter plots
+# 'x' is our predictors, 'y' is our target
+# type = c("p", "smooth") adds a trend line to help see patterns
+featurePlot(x = trainingData$x, 
+            y = trainingData$y, 
+            plot = "scatter",
+            type = c("p", "smooth"),
+            span = .5,
+            layout = c(5, 2))
+```
+The featurePlot confirms that X1 through X2 are the only informative variables because they show clear sloped or curved patterns, while X6 through X10 appear as flat, random clouds, proving they are just noise added to distract the model.
+
+**Training the K-Nearest Neighbors (KNN) Model**
+
+Now training the model K-Nearest Neighbors (KNN), which looks at the data points in the training set that are geographically closest to the new point you want to predict and averages their values.
+
+```{r}
+# Defining how how we want to test the model (5-fold Cross-Validation for speed)
+ctrl <- trainControl(method = "cv", number = 5)
+
+# Train the model
+knnModel <- train(x = trainingData$x, 
+                  y = trainingData$y,
+                  method = "knn",
+                  preProc = c("center", "scale"),
+                  tuneLength = 10,
+                  trControl = ctrl)
+
+# View the results
+print(knnModel)
+
+# Check the performance on the Test Set
+knnPred <- predict(knnModel, newdata = testData$x)
+postResample(pred = knnPred, obs = testData$y)
+```
+
+
+The shows that k=15 is the optimal value for your model, producing a balanced test RMSE of 3.17 and confirming that the model captures about 68% of the relationship in the data without being too distracted by the noise.
+
+**KNN Tuning Plot**
+
+This plot shows how the error changes as we add more neighbors. You noticed K=15 was the best since the error is lowest.
+
+```{r}
+library(ggplot2)
+ggplot(knnModel) + 
+  theme_bw() +
+  labs(title="KNN Model: Finding the Optimal K",
+       x="Number of Neighbors (K)",
+       y="RMSE (Cross-Validation)")
+```
+
+
+**Multivariate Adaptive Regression Splines (MARS)**
+
+Now training a MARS model using the earth package using technique that doesn't try to fit one big curved line to the data. Instead, it breaks the data into segments and fits a piece of a straight line to each segment using hinge functions aka called hockey-stick functions.
+
+By setting degree = 2, we tell MARS to look for cases where two variables interact with each other.
+
+```{r}
+# Define the tuning grid
+# 'degree' 1 is additive, 2 includes interactions
+# 'nprune' is the maximum number of terms in the final model
+marsGrid <- expand.grid(degree = 1:2, nprune = 2:20)
+
+# Train the MARS model
+marsModel <- train(x = trainingData$x, 
+                   y = trainingData$y,
+                   method = "earth",
+                   tuneGrid = marsGrid,
+                   trControl = ctrl) # Using the same 'ctrl' from Step 2
+
+# View the best tuning parameters
+print(marsModel)
+
+# Check test set performance
+marsPred <- predict(marsModel, newdata = testData$x)
+postResample(pred = marsPred, obs = testData$y)
+```
+MARS significantly outperformed KNN by reducing the RMSE from 3.18 to 1.28, as its ability to model second-degree interactions (degree = 2) much more accurately captured the underlying non-linear signal of the Friedman equation.
+
+**MARS Tuning Plot**
+
+This plot shows two lines since MARS has two knobs (degree and nprune).It proves that allowing for interactions (degree = 2) dropped the error much faster than a simple model.
+
+```{r}
+ggplot(marsModel) + 
+  theme_bw() +
+  labs(title="MARS Model: Pruning and Interaction Results",
+       x="Number of Retained Terms (nprune)",
+       y="RMSE (Cross-Validation)")
+```
+
+
+**Support Vector Machines (SVM)**
+
+Training a Support Vector Machine (SVM) using a Radial Basis Function (RBF) kernel trying to find a path that fits the data points. If a point falls inside this path, the model ignores the error; it only focuses on the difficult points that fall outside the Support Vectors.
+
+```{r}
+# Train the SVM model
+# 'svmRadial' is the most common non-linear SVM method
+svmModel <- train(x = trainingData$x, 
+                  y = trainingData$y,
+                  method = "svmRadial",
+                  preProc = c("center", "scale"), # Vital for SVM
+                  tuneLength = 10, # Tells R to try 10 combos of Cost and Sigma
+                  trControl = ctrl) # Uses the 5-fold CV we created earlier
+
+# View the best tuning parameters
+print(svmModel)
+
+# Predict on the large test set
+svmPred <- predict(svmModel, newdata = testData$x)
+postResample(pred = svmPred, obs = testData$y)
+```
+
+While the SVM with its Kernel Trick performed significantly better than the baseline KNN, MARS remains the clear winner with a much lower RMSE, 1.28 vs 2.06, proving that segmenting the data into specific hinge interactions is the most effective way to solve the complex Friedman equation.
+
+**SVM Tuning Plot**
+
+This plot visualizes the Cost (C) parameter where the error drop as the Cost increases, then level off once the model has found the best path to fit the data.
+
+```{r}
+ggplot(svmModel) + 
+  scale_x_log10() + # SVM costs are often best viewed on a log scale
+  theme_bw() +
+  labs(title="SVM Model: Impact of Cost (C) on Performance",
+       x="Cost (Log Scale)",
+       y="RMSE (Cross-Validation)")
+```
+
+
+**Neural Networks (Universal Approximator)**
+
+Now training a Neural Network which is a series of layers where each layer tries to find a different part of the pattern. It takes your X variables, passes them through hidden units, and then combines them into a final prediction for Y.
+
+```{r message=FALSE, warning=FALSE}
+library(caret)
+library(nnet)
+
+# Faster tuning to avoid long running
+nnGrid <- expand.grid(size = c(1, 3, 5), 
+                      decay = c(0, 0.01, 0.1))
+
+nnModel <- train(x = trainingData$x, 
+                 y = trainingData$y,
+                 method = "nnet",
+                 preProc = c("center", "scale"),
+                 tuneGrid = nnGrid,
+                 linout = TRUE, 
+                 trace = FALSE, 
+                 maxit = 100, 
+                 trControl = ctrl) # Uses the 'ctrl' made earlier in code
+
+# Check the results
+nnPred <- predict(nnModel, newdata = testData$x)
+postResample(pred = nnPred, obs = testData$y)
+```
+
+**Neural Network Tuning Plot**
+
+This plot is a grid. It shows how different combinations of Hidden Units (Size) and Weight Decay work together to find the signal in Friedman data.
+
+```{r}
+ggplot(nnModel) + 
+  theme_bw() +
+  labs(title="Neural Network: Hidden Units & Weight Decay Optimization",
+       x="Number of Hidden Units",
+       y="RMSE (Cross-Validation)")
+```
+Goal: We are looking for the lowest point on the line. That point represents the Optimal model settings.
+
+Interpretation: MARS is the best moddel because its significantly lower RMSE of 1.28 and high R2 of 0.93 prove it successfully captured the underlying non-linear equation and interaction terms, whereas the SVM (2.06), Neural Network (2.92), and KNN (3.17) models were notably less precise.
+
+### 7.5. Exercise 6.3 describes data for a chemical manufacturing process. Use
+the same data imputation, data splitting, and pre-processing steps as before
+and train several nonlinear regression models.
+
+### (a) Which nonlinear regression model gives the optimal resampling and test set performance?
+
+**Data Cleaning**
+
+Loading the AppliedPredictiveModeling package, which contains the chemical dataset. 
+
+Since the raw data has missing values (NA) and some columns where the numbers never change (Near-Zero Variance), we are using preProcess to handle it. knnImpute fills in the gaps, and nzv removes the dead weight predictors that don't help the model learn.
+
+
+```{r message=FALSE, warning=FALSE}  
+library(AppliedPredictiveModeling)
+library(caret)
+
+data(ChemicalManufacturingProcess)
+
+
+# We exclude column 1 (Yield) because we only clean the predictors
+cleaning_plan <- preProcess(ChemicalManufacturingProcess[, -1], 
+                            method = c("knnImpute", "nzv"))
+
+# Applying the cleaning to the predictors
+chemPredictors <- predict(cleaning_plan, ChemicalManufacturingProcess[, -1])
+chemYield <- ChemicalManufacturingProcess$Yield
+```
+
+**Data Splitting and Control**
+
+Using createDataPartition to ensure the distribution of our target variable, Yield, is similar in both sets. We also define a trainControl object, telling R to use 10-fold Cross-Validation for every model we train later, ensuring our performance estimates are reliable.
+
+```{r}
+# Set seed for reproducibility
+set.seed(100)
+
+# Creating an index for an 80/20 split
+trainIndex <- createDataPartition(chemYield, p = 0.8, list = FALSE)
+
+# Creating the actual training and testing sets
+trainX <- chemPredictors[trainIndex, ]
+trainY <- chemYield[trainIndex]
+testX  <- chemPredictors[-trainIndex, ]
+testY  <- chemYield[-trainIndex]
+
+# Define the 'rules' for training (10-fold Cross-Validation)
+ctrl <- trainControl(method = "cv", number = 10)
+```
+
+**Visualizing the Target Variable (Yield)**
+
+```{r}
+library(ggplot2)
+
+# Creating a histogram of the target variable
+ggplot(data.frame(Yield = chemYield), aes(x = Yield)) +
+  geom_histogram(fill = "steelblue", color = "white", bins = 20) +
+  theme_minimal() +
+  labs(title = "Distribution of Chemical Manufacturing Yield",
+       x = "Yield (%)", y = "Frequency")
+```
+
+**Visualizing Missing Data (The "Why" for Imputation)**
+
+```{r}
+# Checking for missing values in the raw data (before we imputed)
+# This will show you a bar chart of which variables had the most NAs
+data(ChemicalManufacturingProcess)
+missing_counts <- colSums(is.na(ChemicalManufacturingProcess))
+missing_data <- data.frame(Variable = names(missing_counts), NAs = missing_counts)
+missing_data <- missing_data[missing_data$NAs > 0, ]
+
+ggplot(missing_data, aes(x = reorder(Variable, NAs), y = NAs)) +
+  geom_bar(stat = "identity", fill = "salmon") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Variables with Missing Values", x = "Predictor", y = "Number of NAs")
+```
+
+**Visualizing Predictor Relationships**
+
+```{r}
+# Plotting the first 4 predictors against Yield
+featurePlot(x = trainX[, 1:4], 
+            y = trainY, 
+            plot = "scatter",
+            type = c("p", "smooth"),
+            layout = c(2, 2))
+```
+**K-Nearest Neighbors (KNN)**
+
+Training our first non-linear model, K-Nearest Neighbors (KNN), on the cleaned chemical data and asking the model to predict the Yield of a batch by looking at the 10-fold cross-validation results to find the best value for K.
+
+```{r}
+# Train the KNN model
+# We already cleaned the data in Step 1, so we just run the training
+set.seed(100)
+knnModel_chem <- train(x = trainX, 
+                       y = trainY,
+                       method = "knn",
+                       preProc = c("center", "scale"), # Standard for KNN
+                       tuneLength = 10,
+                       trControl = ctrl)
+
+# View the tuning results
+print(knnModel_chem)
+
+# Check performance on the test set
+knnPred_chem <- predict(knnModel_chem, newdata = testX)
+postResample(pred = knnPred_chem, obs = testY)
+```
+
+```{r}
+library(ggplot2)
+
+# Create the tuning profile plot
+ggplot(knnModel_chem) + 
+  theme_bw() +
+  labs(title = "KNN Tuning Profile: Chemical Manufacturing Yield",
+       x = "Number of Neighbors (K)",
+       y = "RMSE (Cross-Validation)") +
+  geom_point(color = "darkblue", size = 2) +
+  geom_line(color = "steelblue")
+```
+The KNN tuning profile for the chemical manufacturing dataset identifies k=5 as the optimal neighbor count, producing a test RMSE of 1.23 and indicating that the model's accuracy decreases as more neighbors are included in the prediction.
+
+The upward trend in chart, means that as we increase the number of neighbors making the model smoother or more generalized, the predictions actually get worse.
+
+**Multivariate Adaptive Regression Splines (MARS)**
+
+MARS doesn't just look at neighbors; it builds hinges (segmented linear relationships) to fit the data.
+
+By testing degree = 1 (additive) and degree = 2 (interactions), we can see if certain manufacturing steps only matter when combined with specific raw materials.
+
+```{r message=FALSE, warning=FALSE}  
+# Define the tuning grid
+# We test different levels of pruning (nprune) and interactions (degree)
+marsGrid_chem <- expand.grid(degree = 1:2, nprune = 2:38)
+
+# Train the MARS model
+set.seed(100)
+marsModel_chem <- train(x = trainX, 
+                        y = trainY,
+                        method = "earth",
+                        tuneGrid = marsGrid_chem,
+                        trControl = ctrl)
+
+# View the best tuning results
+print(marsModel_chem)
+
+# Check performance on the test set
+marsPred_chem <- predict(marsModel_chem, newdata = testX)
+postResample(pred = marsPred_chem, obs = testY)
+```
+
+MARS achieved a superior RMSE of 1.16 by simplifying the 56 predictors into just four additive hinge terms, demonstrating that a sparse, interpretable model captures the chemical yield more effectively than the denser KNN approach.
+
+```{r}
+# Create the Visualization
+# This plot shows the Cross-Validated RMSE for different numbers of terms
+ggplot(marsModel_chem) + 
+  theme_bw() +
+  labs(title = "MARS Tuning Profile: Chemical Manufacturing Yield",
+       subtitle = "Optimal model selected at nprune = 4 and degree = 1",
+       x = "Number of Retained Terms (nprune)",
+       y = "RMSE (Cross-Validation)") +
+  scale_color_brewer(palette = "Set1")
+```
+The chart proves that a sparse model (few variables) with no interactions is the most robust way to handle this specific chemical process. The lowest point on the entire graph is the red dot at nprune = 4. This represents the most accurate version of the model.
+
+**Support Vector Machines (SVM)**
+
+Training a Support Vector Machine (SVM) with a Radial Basis Function (RBF) Kernel. While KNN looks at neighbors and MARS looks at hinges, SVM tries to find a path that surrounds the data points in a way that minimizes error while staying as flat as possible.
+
+```{r}
+# Train the SVM model
+# We use tuneLength = 10 to let caret automatically pick 10 values for C
+set.seed(100)
+svmModel_chem <- train(x = trainX, 
+                        y = trainY,
+                        method = "svmRadial",
+                        preProc = c("center", "scale"),
+                        tuneLength = 10,
+                        trControl = ctrl)
+
+# View the tuning results
+print(svmModel_chem)
+
+#  Check performance on the test set
+svmPred_chem <- predict(svmModel_chem, newdata = testX)
+postResample(pred = svmPred_chem, obs = testY)
+```
+
+The SVM model effectively leverages its radial kernel to achieve the lowest test error so far (RMSE = 1.07), outperforming both the MARS and KNN models by more accurately capturing the complex, high-dimensional relationships within the chemical manufacturing data.
+
+```{r}
+library(caret)
+library(ggplot2)
+
+# Create the tuning profile plot
+# scale_x_log10() is used because SVM costs usually vary exponentially (0.25, 1, 4, 16...)
+ggplot(svmModel_chem) + 
+  scale_x_log10() +
+  theme_bw() +
+  labs(title = "SVM Tuning Profile: Chemical Manufacturing Yield",
+       subtitle = "Optimal Cost (C) = 16 with Sigma ≈ 0.012",
+       x = "Cost (Log Scale)",
+       y = "RMSE (Cross-Validation)") +
+  geom_line(color = "darkblue") +
+  geom_point(color = "darkblue", size = 2)
+```
+**Neural Networks**
+
+Training an Averaged Neural Network (avNNet) that trains one brain, an averaged network trains several (usually 5) starting from different random points and averages their predictions. This makes the model much more stable
+
+```{r message=FALSE, warning=FALSE}  
+# Define a targeted tuning grid
+nnGrid <- expand.grid(size = c(1, 3, 5), 
+                      decay = c(0.01, 0.1),
+                      bag = FALSE) # 'bag' is for bagging; we'll keep it simple
+
+# Train the Averaged Neural Network
+set.seed(100)
+nnetModel_chem <- train(x = trainX, 
+                        y = trainY,
+                        method = "avNNet",
+                        preProc = c("center", "scale"),
+                        tuneGrid = nnGrid,
+                        linout = TRUE, # Needed for regression
+                        trace = FALSE, # Stops R from printing every iteration
+                        maxit = 500,   # Maximum iterations
+                        trControl = ctrl)
+
+# View results
+print(nnetModel_chem)
+
+# Check test set performance
+nnetPred_chem <- predict(nnetModel_chem, newdata = testX)
+postResample(pred = nnetPred_chem, obs = testY)
+```
+
+The SVM model is the optimal choice for the chemical manufacturing dataset because its RMSE of 1.074 signifies superior predictive accuracy, effectively outperforming MARS (1.165), KNN (1.225), and the significantly underperforming Neural Network (3.038).
+
+### (b) Which predictors are most important in the optimal nonlinear regres
+sion model? Do either the biological or process variables dominate the
+list? How do the top ten important predictors compare to the top ten
+predictors from the optimal linear model?
+
+
+To identify which variables drive the chemical manufacturing process, we calculate the Variable Importance for your optimal model (SVM).
+
+**Calculating and Visualizing Variable Importance**
+
+Since SVM model used a Radial Basis Function (RBF) kernel, importance is determined by how much the model's accuracy (RMSE) would drop if a specific predictor were removed or shuffled. 
+
+We use the varImp() function from the caret package, which standardizes these scores on a scale of 0 to 100.
+
+```{r}
+# Calculating variable importance for the SVM model
+svmImp <- varImp(svmModel_chem)
+
+# Plotting the top 10 most important predictors
+plot(svmImp, top = 10, main = "Top 10 Predictors: SVM Model")
+
+# View the raw scores for the top predictors
+print(svmImp)
+```
+
+SVM model has successfully filtered through the 56 variables to find the specific drivers of manufacturing yield.
+
+**Dominance Analysis**
+
+Manufacturing Process variables clearly dominate the list
+
+Show 6 Process variables versus 4 Biological materials.
+
+ManufacturingProcess32 is significantly more important than anything else, acting as the primary lever for controlling yield in this non-linear model.
+
+**Comparison with the Linear Model (PLS - Partial Least Squares)**
+
+we need to see how these results differ from the Optimal Linear Model (for this dataset is usually PLS - Partial Least Squares). Linear models and non-linear models often disagree because non-linear models can see patterns (like curves or spikes) that linear models miss.
+
+```{r}
+# Train the optimal Linear Model (PLS) for comparison
+set.seed(100)
+plsModel_chem <- train(x = trainX, 
+                       y = trainY,
+                       method = "pls",
+                       tuneLength = 20,
+                       trControl = ctrl)
+
+# Calculate and plot importance for the Linear Model
+plsImp <- varImp(plsModel_chem)
+plot(plsImp, top = 10, main = "Top 10 Predictors: Linear (PLS) Model")
+
+# Print the top 10 scores to compare side-by-side
+print(plsImp)
+```
+**The Model Performance (Part A)**
+
+Support Vector Machines (SVM) is the optimal model with the lowest error (RMSE 1.07).
+
+MARS performed well (RMSE 1.16) by simplifying the 56 variables into just 4 key hinges.
+
+KNN was decent (RMSE 1.22) but struggled to filter out the noise in the large predictor set.
+
+Neural Networks failed significantly (RMSE 3.03), likely because the dataset (144 samples) is too small for a network to learn effectively without overfitting.
+
+**Variable Importance (Part B)**
+
+Manufacturing Process variables dominate the top of the list, accounting for 6 of the top 10 predictors.
+
+ManufacturingProcess32 is the main driver of yield in every model we tested.
+
+While process variables lead, BiologicalMaterial06 is a major factor that the non-linear model values much more highly than the linear model.
+
+Linear vs. Non-Linear: The main difference is that the SVM identified complex, curved patterns in biological materials that the Linear (PLS) model simply couldn't see.
+
+### (c) Explore the relationships between the top predictors and the response for
+the predictors that are unique to the optimal nonlinear regression model.
+Do these plots reveal intuition about the biological or process predictors
+and their relationship with yield?
+
+To answer we need to look for the predictors that the SVM (Non-Linear) model found important but the Linear (PLS) model completely overlooked.
+
+The Linear Model (PLS): Only sees things that go up or down in a straight line. If a relationship is curved, this model gets confused and thinks that variable isn't important.
+
+The Non-Linear Model (SVM): Can see curves, waves, and sudden jumps. It understands complex patterns.
+
+
+**The "Difference" Test**
+
+To find out which predictors have those complex curves, we look at the Top 10 lists from both models and see where they disagree.
+
+Looking at BiologicalMaterial12:
+
+In SVM list, it is in the Top 10.
+
+In PLS list, it is not found.
+
+The Logic: If the straight-line model ignored it, but the curve-seeing model keep it, BiologicalMaterial12 must have a curved relationship with yield.
+
+Look at BiologicalMaterial06:
+
+The Linear model (PLS) thought it was okay and ranked #7.
+
+The Non-Linear model (SVM) thought it was critical and ranked #3.
+
+The SVM found extra information in this variable that the linear model missed. 
+It didn't just see a slight trend; it saw a complex pattern that makes it much more valuable for predicting yield.
+
+**Creating the Scatter Plots**
+
+We will use ggplot2 to plot Yield against these two specific predictors. 
+The importance is visible by the LOESS smoother (the blue line in the code below). It doesn't force a straight line; it follows the data wherever it goes, revealing if there is a curve or a flat spot.
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+
+# Prepare a small data frame for plotting
+# We combine the predictors and the Yield into one table
+plot_df <- as.data.frame(trainX)
+plot_df$Yield <- trainY
+
+# Plot BiologicalMaterial12 (The 'Hidden Gem')
+p1 <- ggplot(plot_df, aes(x = BiologicalMaterial12, y = Yield)) +
+  geom_point(alpha = 0.4) + # Points are slightly see-through to show density
+  geom_smooth(method = "loess", color = "blue", se = TRUE) + # The 'curve-finder'
+  theme_minimal() +
+  labs(title = "SVM Unique: BiologicalMaterial12",
+       x = "BiologicalMaterial12 Value",
+       y = "Yield")
+
+# Plot BiologicalMaterial06 (The 'Rank Jumper')
+p2 <- ggplot(plot_df, aes(x = BiologicalMaterial06, y = Yield)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess", color = "red", se = TRUE) +
+  theme_minimal() +
+  labs(title = "SVM Rank Jumper: BiologicalMaterial06",
+       x = "BiologicalMaterial06 Value",
+       y = "Yield")
+
+# Display them side-by-side
+grid.arrange(p1, p2, ncol = 2)
+```
+BiologicalMaterial12:
+
+A linear model tries to draw one straight diagonal line through this. Because the line goes up then down, the linear model sees an average of zero and thinks the variable is useless. The SVM sees the switch and uses it to make better predictions.
+
+BiologicalMaterial06:
+
+The linear model only sees that the data generally goes up from left to right, so it completely misses the fact that excessive amounts are actually harmful.
+
+The plots reveal that these predictors exhibit distinct threshold effects and optimal ranges where yield eventually saturates or declines at high values—non-linear complexities that the SVM model identifies and exploits while the linear model's straight-line assumption remains blind to them.

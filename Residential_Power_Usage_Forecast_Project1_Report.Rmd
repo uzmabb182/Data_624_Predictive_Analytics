@@ -1,0 +1,149 @@
+---
+title: "Project 1 Part B: Residential Power Usage Forecast Report"
+author: "Mubashira Qari"
+date: "2026-03-02"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    highlight: tango
+---
+
+### **1. Executive Summary & Data Audit**
+
+To provide a reliable **business-ready forecast** for the 2014 residential power load, the dataset was examined for quality and structural integrity. The raw data spans **192 months (January 1998 – December 2013).**
+
+The audit identified:
+
+- One missing value (NA) in September 2008  
+- A significant data recording anomaly in July 2010 that required correction to prevent a skewed budget projection  
+
+---
+
+### **2. Pre-processing & Imputation Techniques**
+
+#### **Date Standardization**
+
+The character-based "YYYY-MMM" strings were converted into a formal month-year index to create a structured time series (tsibble).
+
+#### **Imputation by Interpolation**
+
+For the missing value in September 2008, a **Time Series Linear Model (TSLM)** was used.  
+This method estimates the missing point based on:
+
+- The long-term trend  
+- The 12-month seasonal cycle  
+
+Rather than using a simple average.
+
+#### **Outlier Treatment (July 2010)**
+
+The data contained a massive crash in July 2010 (~770k KWH), which is 90% below typical summer demand. This was identified as a recording error.
+
+To normalize the series:
+
+- The value was set to NA  
+- It was re-imputed to a realistic summer peak (~8.3 Million KWH)  
+
+---
+
+### **3. Exploratory Data Analysis (EDA)**
+
+#### **Time Series Plot (Overall Trend)**
+
+The plot shows consistent growth in residential consumption until roughly 2008. After 2008, consumption stabilizes, likely due to improved energy efficiency standards.
+
+#### **Seasonal Plot (Monthly Rhythms)**
+
+Two distinct annual surges appear:
+
+- Primary peak: July/August (Air Conditioning usage)  
+- Secondary peak: January/December (Heating demand)  
+
+#### **ACF Plot (Statistical Evidence)**
+
+Repeating peaks at lags 12, 24, and 36 confirm a strong 12-month annual seasonal cycle.
+
+---
+
+### **4. Modeling Methodology**
+
+#### **ARIMA (Auto-Regressive Integrated Moving Average)**
+
+Used to handle:
+
+- Complex correlations within monthly data  
+- Non-stationary trends through differencing  
+
+#### **ETS (Exponential Smoothing)**
+
+Used to:
+
+- Manage additive seasonal patterns  
+- Weight recent history more heavily  
+
+#### **Model Selection**
+
+The ARIMA model was selected due to a significantly lower AICc:
+
+- ARIMA: 5327  
+- ETS: 6141  
+
+This indicates a more efficient fit for the energy grid.
+
+---
+
+### **5. Techniques Not Used**
+
+To maintain forecast quality, simpler methods were excluded:
+
+- **Simple Mean:** Rejected due to strong seasonality  
+- **Zero-Filling:** Would falsely imply complete power failure  
+- **SNAIVE (Seasonal Naive):** Cannot account for long-term trend changes  
+
+---
+
+### **6. Final Forecast Interpretation (2014)**
+
+#### **Cyclical Demand Management**
+
+Projected Total Annual Load (2014):
+
+**94,621,199 KWH**
+
+- Winter Peak: January 2014 (~10.38M KWH)  
+- Summer Peak: August 2014 (~9.93M KWH)  
+
+#### **Shoulder Season Planning**
+
+Lower demand expected during:
+
+- April (~6M KWH)  
+- October (~6M KWH)  
+
+These represent mild weather periods with minimal climate control usage.
+
+---
+
+### **7. Technical Appendix: Statistical Validation**
+
+#### **Residual Diagnostics (Ljung-Box Test)**
+
+p-value = 0.67  
+
+Since p-value > 0.05, the residuals are considered **White Noise**, confirming the model captured all relevant patterns.
+
+#### **Stationarity Testing (KPSS Test)**
+
+p-value = 0.01  
+
+The low p-value confirms the raw data was non-stationary, justifying the use of ARIMA differencing.
+
+---
+
+### **8. Conclusion**
+
+By identifying and correcting the 2010 recording anomaly and applying a Seasonal ARIMA model, a robust 2014 forecast was generated.
+
+Seasonal swings remain the primary driver of residential demand, requiring higher capacity reserves in January and August to maintain grid stability.

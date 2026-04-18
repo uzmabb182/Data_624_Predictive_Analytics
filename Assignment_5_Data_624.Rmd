@@ -1,8 +1,10 @@
 ---
 title: "Assignment_5_Data_624"
 author: "Mubashira Qari"
-date: "2026-02-22"
+date: "2026-03-03"
 output:
+  word_document:
+    toc: true
   html_document:
     toc: true
     toc_float: true
@@ -70,7 +72,7 @@ aus_forecast <- aus_fit |>
   forecast(h = 4)
 
 # View the forecast table
-aus_forecast
+# aus_forecast
 ```
 **Visualize the Results**
 
@@ -178,7 +180,7 @@ components(aus_exports_fit) |> autoplot()
 
 ```{r}
 components(aus_exports_fit) |>
-  left_join(fitted(aus_exports_fit), by = c("Country", ".model", "Year"))
+ left_join(fitted(aus_exports_fit), by = c("Country", ".model", "Year"))
 ```
 
 **Generating forecasts for the next 10 years**
@@ -328,7 +330,7 @@ The Holt_AAN interval is narrower because its lower RMSE indicates a more precis
 
 Both intervals are centered around their respective point forecasts (20.61 for SES vs. 20.84 for Holt), showing how the trend component shifts the entire range upward.
 
-### Intervals Using R### 
+**Intervals Using R** 
 
 ```{r}
 

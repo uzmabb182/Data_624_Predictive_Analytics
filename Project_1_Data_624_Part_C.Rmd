@@ -1,0 +1,184 @@
+---
+title: "Project_1_Data_624_Part_C"
+author: "Mubashira Qari"
+date: "2026-03-01"
+output:
+  word_document:
+    toc: true
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+# Load Dataset and Find Summary of NA
+
+```{r message=FALSE, warning=FALSE}
+
+# --- Step 1: Loading Libraries and Data Audit ---
+
+library(tidyverse)
+library(fpp3)
+library(naniar) # Visualizing missingness
+
+# Read the raw residential power data
+url1 <- "https://raw.githubusercontent.com/uzmabb182/Data_624_Predictive_Analytics/refs/heads/main/Waterflow_Pipe1.csv"
+pipe1_wf <- read_csv(url1)
+
+# View the first few rows
+head(pipe1_wf)
+
+# Summary of missing values (NAs)
+cat("--- Count of NAs in Waterflow Pipe1 Data ---\n")
+print(colSums(is.na(pipe1_wf)))
+```
+
+```{r message=FALSE, warning=FALSE}
+
+# --- Step 1: Loading Libraries and Data Audit ---
+
+library(tidyverse)
+library(fpp3)
+library(naniar) # Visualizing missingness
+
+# Read the raw residential power data
+url2 <- "https://raw.githubusercontent.com/uzmabb182/Data_624_Predictive_Analytics/refs/heads/main/Waterflow_Pipe2.csv"
+pipe2_wf <- read_csv(url2)
+
+# View the first few rows
+head(pipe2_wf)
+
+# Summary of missing values (NAs)
+cat("--- Count of NAs in Waterflow Pipe2 Data ---\n")
+print(colSums(is.na(pipe2_wf)))
+
+```
+
+# Convert time and aggregate by hour (Mean)
+
+```{r}
+pipe1_hourly <- read_csv(url1) |>
+  mutate(
+    # Using parse_date_time to handle multiple date formats automatically
+    DateTime = parse_date_time(`Date Time`, orders = c("mdy HMS", "mdy HM", "ymd HMS")),
+    Hour = floor_date(DateTime, "hour")
+  ) |>
+  filter(!is.na(Hour)) |>
+  group_by(Hour) |>
+  summarise(Pipe1_Flow = mean(WaterFlow, na.rm = TRUE))
+
+pipe2_hourly <- read_csv(url2) |>
+  mutate(
+    DateTime = parse_date_time(`Date Time`, orders = c("mdy HMS", "mdy HM", "ymd HMS")),
+    Hour = floor_date(DateTime, "hour")
+  ) |>
+  filter(!is.na(Hour)) |>
+  group_by(Hour) |>
+  summarise(Pipe2_Flow = mean(WaterFlow, na.rm = TRUE))
+
+# View the results of the aggregation
+head(pipe1_hourly)
+head(pipe2_hourly)
+```
+# Merge pipes and create a unified tsibble
+Using full_join to ensure a complete hourly timeline
+Aggregating multiple recordings within the same hour into a single mean value.
+
+```{r}
+
+waterflow_ts <- full_join(pipe1_hourly, pipe2_hourly, by = "Hour") |>
+  as_tsibble(index = Hour) |>
+  fill_gaps() # This ensures no missing hours in the sequence
+
+# View the final hourly aggregated table
+head(waterflow_ts)
+
+```
+
+# Visualization and Stationarity Testing
+We will plot both pipe flows to look for trends or seasonal patterns and then use the KPSS test to formally check for stationarity.
+This determines if we can proceed with a forecast or if the data requires transformation (like differencing).
+
+```{r}
+
+# Visualize both pipes on the same timeline
+# This helps identify if the pipes follow similar patterns or have gaps
+
+waterflow_ts |>
+  pivot_longer(cols = c(Pipe1_Flow, Pipe2_Flow), names_to = "Pipe", values_to = "Flow") |>
+  autoplot(Flow) +
+  labs(title = "Hourly Water Flow: Pipe 1 vs Pipe 2",
+       subtitle = "Aggregated by Mean per Hour",
+       y = "Water Flow Rate",
+       x = "Time (Hours)") +
+  theme_minimal() +
+  facet_wrap(~Pipe, scales = "free_y", ncol = 1)
+
+# Perform KPSS Stationarity Test
+# Null Hypothesis (H0): The data is stationary.
+# If p-value < 0.05, the data is non-stationary and needs differencing.
+
+waterflow_ts |>
+  pivot_longer(cols = c(Pipe1_Flow, Pipe2_Flow), names_to = "Pipe", values_to = "Flow") |>
+  filter(!is.na(Flow)) |>
+  features(Flow, unitroot_kpss) |>
+  knitr::kable(caption = "KPSS Stationarity Test Results for Water Flow")
+
+```
+
+The KPSS test results p-value = 0.1 are good Since the p-value is greater than 0.05, we fail to reject the null hypothesis,
+statistically confirming that the water flow in both pipes is stationary.
+
+This means the data is stable and ready for forecasting without needing complex differencing transformations.
+
+# Modeling and One-Week Forecast
+
+```{r}
+# The ARIMA function automatically selects the best parameters for stationary data
+waterflow_models <- waterflow_ts |>
+  pivot_longer(cols = c(Pipe1_Flow, Pipe2_Flow), 
+               names_to = "Pipe", 
+               values_to = "Flow") |>
+  as_tsibble(index = Hour, key = Pipe) |>
+  fill_gaps() |>
+  model(arima = ARIMA(Flow))
+```
+
+# Generate the 1-week (168 hours) forecast
+
+```{r}
+
+waterflow_forecast <- waterflow_models |>
+  forecast(h = "168 hours")
+
+```
+
+# Visualize the Forecast
+
+```{r}
+# This displays the historical data followed by the 7-day projection
+waterflow_forecast |>
+  autoplot(waterflow_ts |> 
+             pivot_longer(cols = c(Pipe1_Flow, Pipe2_Flow), 
+                          names_to = "Pipe", values_to = "Flow") |>
+             as_tsibble(index = Hour, key = Pipe), 
+           level = 80) +
+  facet_wrap(~Pipe, scales = "free_y", ncol = 1) +
+  labs(title = "One-Week Water Flow Forecast",
+       subtitle = "Stationary ARIMA Projections for Pipe 1 and Pipe 2",
+       y = "Water Flow Rate",
+       x = "Time") +
+  theme_minimal()
+```
+# Save the forecast to an Excel-readable CSV file
+
+```{r}
+final_forecast_output <- waterflow_forecast |>
+  as_tibble() |>
+  select(Pipe, Hour, .mean) |>
+  rename(Forecasted_Flow = .mean)
+
+write_csv(final_forecast_output, "Waterflow_OneWeek_Forecast.csv")
+
+cat("Step 3 Complete. Forecast saved to 'Waterflow_OneWeek_Forecast.csv'.")
+```
+

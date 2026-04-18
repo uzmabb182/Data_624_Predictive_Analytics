@@ -1,0 +1,83 @@
+---
+title: "Project 1 Part A: Strategic ATM Cash Forecasting Report"
+author: "Mubashira Qari"
+date: "2026-03-03"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    highlight: tango
+---
+
+## **1. Executive Summary & Data Audit**
+
+To provide a reliable "business-ready" forecast, the dataset was examined for quality issues. The raw data contained **19 missing values (NAs)** and **14 trailing rows** that represented future dates without corresponding ATM or cash data. These rows were removed to prevent indexing errors in the time-series model.
+
+## **2. Pre-processing & Imputation Techniques**
+
+Standardizing the data was critical for capturing the **"heartbeat"** of each machine:
+
+* **Date Standardization**: Redundant timestamps (e.g., "12:00:00 AM") were stripped to create a clean daily index.
+* **Imputation by Interpolation**: For the historical gaps in June 2009, I avoided simple averages. Instead, a **Time Series Linear Model (TSLM)** was used to interpolate values based on the trend and the **7-day weekly cycle**.
+* **Outlier Treatment (ATM4)**: **ATM4** contained a massive spike near **$1,000,000**. As noted in *Applied Predictive Modeling*, outliers of this magnitude can pull the model's mean and skew the final forecast. This value was replaced with the **median** to normalize the data while preserving the machine's natural volatility.
+
+
+## **3. Modeling Methodology**
+
+Three distinct modeling techniques were applied to each machine to identify the most accurate fit:
+
+* **ARIMA**: This was particularly effective for **ATM1** and **ATM2**, as it successfully modeled the **Seasonal Difference** (the relationship between this Monday and last Monday).
+* **ETS**: This model was used to automatically handle changing trends and seasonal patterns without requiring manual parameter tuning.
+* **Benchmark (SNAIVE)**: A **"Seasonal Naive"** model was used as a baseline. 
+If a complex **ARIMA** model cannot beat the logic of just repeat what happened 7 days ago, the complex model is rejected for a simpler business approach.
+
+## **4. Techniques Not Used**
+
+To maintain a high-quality forecast, several simpler methods were intentionally excluded:
+
+* **Simple Mean**: This was rejected because it ignores the clear **7-day rhythm**. An ATM that is busy on Fridays but quiet on Mondays cannot be accurately modeled by a single average number.
+* **Drift Method**: This was not used because the ATMs showed a stable **"flat" trend** rather than a consistent long-term increase or decrease in cash demand.
+* **Zero-Filling**: Replacing missing values with zero was avoided, as it would falsely signal to the model that the ATM was broken or inactive, ruining the seasonal accuracy.
+
+## **5. Final Forecast Interpretation (May 2010)**
+
+The final forecasts demonstrate the unique **"personalities"** of the four machines:
+
+### **ATM1 & ATM2: Cyclical Consistency**
+* The forecasts show high confidence and a strong continuation of the predictable **weekly cycle**.
+* **ATM1** is expected to peak on Sundays (e.g., May 2nd) at values exceeding **100 units**, while **ATM2** peaks mid-week at approximately **97–101 units**.
+
+### **ATM3: Sparse Activity**
+* Due to a lack of historical data (mostly zeros until the end of April), the forecast is a simple **"Naive" continuation** of the most recent activity levels.
+* The model anticipates a steady **84.58 units** daily based on the sudden late-April spike.
+
+### **ATM4: High-Variance Management**
+* Even after cleaning, the forecast for this machine is **erratic and noisy**. 
+* The **ARIMA model** was selected here because it is designed to handle this type of random (**stochastic**) fluctuation better than smoother models, forecasting a wide range of withdrawals between **280 and 495 units**.
+
+
+
+---
+
+## **6. Technical Appendix: Decoding ARIMA (p, d, q) Models**
+
+To provide a deeper "business feeling" for the forecasting process, this appendix explains the specific parameters of the winning **ARIMA** models.
+
+### **The Non-Seasonal Components (p, d, q)**
+* **p (Auto-Regressive)**: This represents how many past days of data are used to predict today. For **ATM2**, a **p=2** indicates the model looks at the previous two days to determine today's forecast.
+* **d (Integrated/Differencing)**: This shows how many times the data was "subtracted" from previous values to make the trend stable. A **d=0** suggests the data was already stable enough without trend-correction steps.
+* **q (Moving Average)**: This represents the number of past "forecast errors" the model uses to adjust today’s value. For **ATM1**, a **q=1** means the model corrects itself based on yesterday's error.
+
+
+
+### **The Seasonal Components (P, D, Q)[m]**
+These parameters handle the **7-day weekly cycle**.
+
+* **D (Seasonal Differencing)**: For **ATM1** and **ATM2**, a **D=1** means the model subtracts last Monday's value from this Monday's value to focus on the weekly change.
+* **Q (Seasonal Moving Average)**: This corrects the forecast based on errors from the same day in previous weeks.
+* **[m] (Period)**: The **[7]** confirms the model is specifically tuned to a **weekly rhythm**.
+
+### **Model-Specific Highlights**
+* **ATM1: `ARIMA(0,0,1)(0,1,2)[7]`** — A purely seasonal model relying on weekly repetitions.
+* **ATM4: `ARIMA(3,0,2)(1,0,0)[7]`** — The most complex model, using three days of history (**p=3**) to manage its **unpredictable** and **random** behavior.

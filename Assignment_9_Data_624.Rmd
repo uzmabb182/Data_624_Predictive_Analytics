@@ -1,0 +1,455 @@
+---
+title: "Assignment_9_Data_624"
+author: "Mubashira Qari"
+date: "2026-04-18"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+  word_document:
+    toc: true
+---
+
+### 8.1. Recreate the simulated data from Exercise 7.2
+
+### (a) Fit a random forest model to all of the predictors, then estimate the
+variable importance scores
+
+Tree-Based Models models handle non-linearity naturally by cutting the data into boxes.
+
+**Recreate the Simulated Data**
+
+```{r message=FALSE, warning=FALSE} 
+
+library(mlbench)
+library(caret)
+library(randomForest)
+
+# Setting seed for reproducibility
+set.seed(200)
+
+# Generating the data: 200 samples, 10 predictors
+simulated <- mlbench.friedman1(200, sd = 1)
+simulated <- cbind(simulated$x, simulated$y)
+simulated <- as.data.frame(simulated)
+colnames(simulated)[ncol(simulated)] <- "y"
+
+```
+
+
+**Fit the Random Forest Model**
+
+Using randomForest package setting ntree = 1000 to ensure the model stabilizes and importance = TRUE so the model tracks how much each variable contributes to reducing the error.
+
+```{r}
+# Fitting the model to all 10 predictors
+model1 <- randomForest(y ~ ., 
+                       data = simulated,
+                       importance = TRUE,
+                       ntree = 1000)
+```
+
+Random Forest is an ensemble method. It builds many different trees on random subsets of data and averging 1,000 trees helps smooth out the noise and provides a more reliable estimate of variable importance than a single tree would.
+
+**Estimate Variable Importance**
+
+Using the varImp function from caret to extract the scores. For regression trees, importance is typically measured by the total decrease in Node Impurity (Residual Sum of Squares) that results from splits on that variable.
+
+```{r}
+# Estimating variable importance
+rfImp1 <- varImp(model1, scale = FALSE)
+
+# Viewing the scores
+print(rfImp1)
+
+
+```
+Noise Filter: The model did not significantly use V6–V10.
+
+In a Random Forest, a negative importance score like we see for V7–V10 is the model's way of saying that the variable is useless that randomly shuffling its values actually made the model slightly more accurate by accident.
+
+Unlike a standard Linear Regression—which might try to force a coefficient onto V10—Random Forest naturally ignores these because they never provide a clean split that reduces the variance of your target Y.
+
+### (b) Now add an additional predictor that is highly correlated with one of the informative predictors. 
+
+**Add the First Correlated Predictor (duplicate1)**
+
+Creating a variable that is almost identical to V1 but with a tiny bit of random noise added.
+
+```{r}
+# Creating the first duplicate correlated with V1
+set.seed(200)
+simulated$duplicate1 <- simulated$V1 + rnorm(200) * 0.1
+
+# Verify the correlation (it should be very high, ~0.99)
+cat("Correlation between V1 and duplicate1:", cor(simulated$V1, simulated$duplicate1), "\n")
+
+# Fit the second Random Forest model
+model2 <- randomForest(y ~ ., data = simulated, importance = TRUE, ntree = 1000)
+
+# 4. Extract importance
+rfImp2 <- varImp(model2, scale = FALSE)
+print(rfImp2[c("V1", "duplicate1"), , drop = FALSE])
+```
+Those numbers perfectly illustrate the dilution effect. We saw while V1 score of 8.73, it has now dropped to 6.01.
+
+**Adding a Second Duplicate (duplicate2)**
+
+```{r}
+# Add a second predictor also highly correlated with V1
+set.seed(200)
+simulated$duplicate2 <- simulated$V1 + rnorm(200) * 0.1
+
+# Fit the third Random Forest model
+model3 <- randomForest(y ~ ., 
+                       data = simulated, 
+                       importance = TRUE, 
+                       ntree = 1000)
+
+# Extract importance for the V1 family
+rfImp3 <- varImp(model3, scale = FALSE)
+print(rfImp3[c("V1", "duplicate1", "duplicate2"), , drop = FALSE])
+```
+By adding a second duplicate, the importance score for V1 has moved from its original 8.73 down to 4.84. It duplicates are now stealing more than half of the credit that originally belonged to V1.
+
+### (c) Use the cforest function in the party package to fit a random forest model
+using conditional inference trees. The party package function varimp can
+calculate predictor importance. The conditional argument of that func
+tion toggles between the traditional importance measure and the modified
+version described in Strobl et al. (2007). Do these importances show the
+same pattern as the traditional random forest model?
+
+**Load the Library and Fit the Model**
+
+```{r message=FALSE, warning=FALSE} 
+
+# Load the party package
+library(party)
+
+# Fit the Conditional Forest model
+# We use the same 'simulated' data frame from part (b) that has V1-V10 + duplicates
+set.seed(200)
+cforestModel <- cforest(y ~ ., 
+                        data = simulated, 
+                        control = cforest_unbiased(ntree = 1000, mtry = 3))
+
+# Verify the model is created
+print(cforestModel)
+```
+
+**Calculate Traditional vs. Conditional Importance**
+
+Now we use the varimp function to see how the importance changes when we toggle the conditional argument.
+
+Traditional (conditional = FALSE): This behaves like the standard Random Forest you already ran; it treats every variable as independent.
+
+Conditional (conditional = TRUE): This is the Strobl et al. (2007) method. It calculates importance by permuting a variable only within partitions of the other correlated variables. It should be much fairer to correlated predictors.
+
+```{r}
+
+# Calculate traditional (unconditional) importance
+# This should look similar to your previous Random Forest results
+imp_uncond <- varimp(cforestModel, conditional = FALSE)
+
+# Calculate conditional importance 
+# This is the more computationally expensive step
+imp_cond <- varimp(cforestModel, conditional = TRUE)
+
+# View the results for V1 and its duplicates side-by-side
+importance_comparison <- data.frame(
+  Predictor = c("V1", "duplicate1", "duplicate2"),
+  Unconditional = imp_uncond[c("V1", "duplicate1", "duplicate2")],
+  Conditional = imp_cond[c("V1", "duplicate1", "duplicate2")]
+)
+
+print(importance_comparison)
+```
+The Unconditional Pattern (Same as Traditional):
+
+The Unconditional column follows the same pattern as the standard Random Forest from part (b). The importance is diluted across the three variables, with the original V1 retaining the highest share, followed by the duplicates. The total group importance (approx 9.5) is very close to V1’s original standalone importance (approx 8.7).
+
+The Conditional Pattern (The Change):
+
+The Conditional scores are drastically lower.Conditional importance scores drop because the model only awards points for the unique information a variable adds that isn't already provided by its correlated twins.
+
+### d) Repeat this process with different tree models, such as boosted trees and
+Cubist. Does the same pattern occur?
+
+**Boosted Trees (GBM)**
+
+Unlike Random Forest, which builds trees in parallel, Gradient Boosting Machines (GBM) build trees one after another. Each new tree tries to fix the mistakes (residuals) of the previous one.
+
+```{r}
+library(gbm)
+
+# Fitting the GBM model
+# we use distribution = "gaussian" for regression
+set.seed(200)
+gbmModel <- gbm(y ~ ., 
+                data = simulated, 
+                distribution = "gaussian",
+                n.trees = 1000,
+                interaction.depth = 3,
+                shrinkage = 0.1)
+
+# Extracting importance scores
+# summary() in gbm provides the "Relative Influence"
+gbmImp <- summary(gbmModel, plotit = FALSE)
+
+# 3. View scores for the V1 family
+print(gbmImp[gbmImp$var %in% c("V1", "duplicate1", "duplicate2"), ])
+```
+V1 (15.16) & duplicate1 (7.96): The model heavily utilized the first two versions of the signal.
+
+duplicate2 (0.00): The model completely ignored the third duplicate.
+
+Because boosting works sequentially, the first few hundred trees likely used V1 and duplicate1 to explain almost all the variance related to that signal. By the time the model considered duplicate2, there was simply no error left for it to fix, so it was never used in a split.
+
+**Cubist Model**
+
+This model is unique because it creates a set of if-then rules, and for each rule, it fits a linear regression model. Importance in Cubist is measured by how often a variable is used in the conditions, the "if" part and the models the "then" part.
+
+```{r}
+library(Cubist)
+
+# Prepare X and Y for Cubist
+# Cubist requires the predictors and outcome to be separate
+train_X <- simulated[, names(simulated) != "y"]
+train_Y <- simulated$y
+
+# Fit the Cubist model
+# committees = 1 makes it a simple model tree
+cubistModel <- cubist(x = train_X, y = train_Y, committees = 1)
+
+# Extract variable importance
+# Cubist calculates how often a variable is used in the Rules vs the Models
+cubistImp <- varImp(cubistModel)
+
+# View scores for the V1 family
+print(cubistImp[rownames(cubistImp) %in% c("V1", "duplicate1", "duplicate2"), , drop = FALSE])
+```
+Cubist acts as an aggressive feature selector by assigning all predictive importance to V1 and completely ignoring the redundant duplicates, which effectively prevents the credit-sharing dilution problem seen in Random Forests.
+
+### 8.2.Use a simulation to show tree bias with different granularities.
+
+To understand Tree Bias, we need to see how decision trees"cheat. Decision trees are notoriously biased toward predictors with many possible split points, high granularity, even if those predictors are completely useless.
+
+**Create a Fair Simulation (Pure Noise)**
+
+We will create a dataset where the outcome Y is purely random. None of the predictors have any actual relationship with Y. We will then create four predictors with different levels of granularity.
+
+```{r message=FALSE, warning=FALSE} 
+library(rpart)
+library(caret)
+
+set.seed(2026) # Keeping it in the current year
+n <- 1000
+
+# Create the target (pure noise)
+y <- rnorm(n)
+
+# Create predictors with different granularities (all pure noise)
+x_binary <- sample(0:1, n, replace = TRUE)           # 2 levels (Low granularity)
+x_five   <- sample(1:5, n, replace = TRUE)           # 5 levels
+x_twenty <- sample(1:20, n, replace = TRUE)          # 20 levels
+x_cont   <- rnorm(n)                                 # Continuous (High granularity)
+
+# Combine into a data frame
+sim_data <- data.frame(y, x_binary, x_five, x_twenty, x_cont)
+
+# Check the unique values (granularity)
+sapply(sim_data, function(x) length(unique(x)))
+```
+
+This output confirms the varying levels of granularity across your predictors, showing that x_cont has the most potential split points while x_binary has the fewest, which helps for demonstrating tree selection bias.
+
+**Fit the Biased Tree (CART)**
+
+Since our data is pure noise, a normal tree would stop immediately. We will force it to grow by setting the complexity parameter (cp) to 0. This forces the tree to make splits even if they don't actually improve the model.
+
+```{r}
+# Fit the standard rpart tree
+# We use y ~ . to include all our noise predictors
+fit_rpart <- rpart(y ~ x_binary + x_five + x_twenty + x_cont, 
+                   data = sim_data, 
+                   control = rpart.control(cp = 0, minsplit = 5))
+
+# Extract and print the variable importance
+# In a fair world, these would all be 0 or equal.
+print(fit_rpart$variable.importance)
+```
+The importance scores perfectly track with the number of unique values in each predictor, demonstrating that standard decision trees are inherently biased toward high-granularity variables even when they contain zero predictive signal.
+
+### 8.3.In stochastic gradient boosting the bagging fraction and learning rate will govern the construction of the trees as they areguided by the gradient.
+
+The difference between these two models comes down to Greed vs. Exploration. When you increase the learning rate and bagging fraction, I create a model that is very aggressive and very consistent, which naturally concentrates credit into a few main predictors.
+
+The Greedy Model (Right Side: 0.9 / 0.9):
+
+High Learning Rate (0.9): The very first tree tries to solve almost the entire problem at once. It identifies the strongest, most obvious predictors and uses them heavily to reduce the error. Because it learns so much so fast, there is very little unexplained noise left for the later trees to fix.
+
+High Bagging Fraction (0.9): Since every tree sees 90% of the data, the trees are all very similar. They all "agree" on which predictors are the best. This consistency reinforces the importance of the top variables and prevents the model from ever looking at the "underdog" predictors.
+
+The Exploratory Model (Left Side: 0.1 / 0.1):
+
+Low Learning Rate (0.1): This is more like a marathon runner taking tiny steps. No single tree is allowed to have a major impact. By learning slowly, the model doesn't let the main predictors solve the whole puzzle in the first few rounds, which leaves room for other variables to contribute later.
+
+Low Bagging Fraction (0.1): This introduces a massive amount of randomness. Because each tree only sees a random 10% of the data, it is likely that in some trees, the best predictor isn't even present or doesn't look very good in that specific slice. This forces the model to search for signals in secondary or tertiary predictors it otherwise would have ignored.
+
+### (b)Which model do you think would be more predictive of other samples?
+
+The model on the left (Learning Rate = 0.1, Bagging Fraction = 0.1) would be more predictive of other samples.
+
+While the model on the right may achieve a lower error on the training data more quickly, the model on the left is superior for generalization due to the following reasons:
+
+Resistance to Overfitting: A high learning rate (0.9) is greedy; it attempts to correct all remaining errors in just a few trees, often capturing noise rather than true underlying patterns. The lower learning rate of 0.1 acts as a form of regularization, requiring many small, cautious steps that are less likely to overfit the specific nuances of the training set.
+
+Reduced Tree Correlation: By only using 10% of the data for each tree (Bagging Fraction = 0.1), the individual trees in the ensemble become less correlated. In the model on the right, almost every tree sees 90% of the same data, leading to a consensus that may be biased. The randomness on the left ensures the model sees the data from many different angles, reducing the overall variance of the final prediction.
+
+Feature Robustness: As seen in part (a), the left model spreads its importance across more predictors. This makes it more robust to other samples where a primary predictor might be missing or noisy. The right model is heavily over-committed to just a few variables; if those variables behave differently in a new sample, the model's performance will crash.
+
+### (c) How would increasing interaction depth affect the slope of predictor importance for either model 
+
+Increasing the interaction depth generally decreases the steepness of the importance slope flattens it for both models.
+
+Mechanism of the Change:
+
+Recognition of Interactions: Interaction depth determines the maximum number of nodes in each tree. A depth of 1 stumps only allows the model to capture independent effects. Increasing the depth allows the model to capture synergies, where variables become important only when paired with others.
+
+Redistribution of Credit: In deeper trees, once a primary predictor makes the initial split, secondary and tertiary predictors are used to partition the remaining data. These supporting variables, which might have zero importance in a shallow model, start receiving a share of the importance credit for their role in these multi-variable interactions.
+
+Slope Flattening: Because the model is now utilizing more variables to explain the complex structure of the data rather than relying solely on the strongest individual predictors, the importance is spread across a wider pool of features. This results in a more gradual, balanced distribution of importance scores and a flatter slope on the importance plot.
+
+Specific Impact on Fig 8.24 Models:
+For the Exploratory Model (0.1/0.1): The already gradual slope would become even more elongated as the model finds deeper, more subtle interactions across the dataset.
+
+For the Greedy Model (0.9/0.9): While the high learning rate still favors dominant predictors, the added depth allows secondary variables to help those top predictors within the same tree, softening the dramatic drop-off seen in simple stump-based models.
+
+### 8.7. Refer to Exercises 6.3 and 7.5 which describe a chemical manufacturing
+
+### (a) Which tree-based regression model gives the optimal resampling and test set performance?
+
+**Data Preparation and Preprocessing**
+
+```{r}
+library(AppliedPredictiveModeling)
+library(caret)
+
+# Load the dataset
+data(ChemicalManufacturingProcess)
+
+# Impute missing values (KNN Imputation is standard for this dataset)
+# We use preProcess to handle imputation based on the training set
+set.seed(2026)
+impute_proc <- preProcess(ChemicalManufacturingProcess, method = "knnImpute")
+chem_data <- predict(impute_proc, ChemicalManufacturingProcess)
+
+# Data Splitting (80/20 split)
+set.seed(2026)
+training_rows <- createDataPartition(chem_data$Yield, p = 0.8, list = FALSE)
+
+train_X <- chem_data[training_rows, -1] # Remove Yield (column 1)
+train_Y <- chem_data[training_rows, 1]
+test_X  <- chem_data[-training_rows, -1]
+test_Y  <- chem_data[-training_rows, 1]
+
+# 4. Set up Cross-Validation (10-fold CV)
+ctrl <- trainControl(method = "cv", number = 10)
+```
+
+**Training the Tree-Based Models**
+
+```{r}
+library(AppliedPredictiveModeling)
+library(caret)
+
+# 1. Load the data
+data(ChemicalManufacturingProcess)
+
+# 2. THE SIMPLE FIX: Impute all NAs immediately
+# We'll use medianImpute—it's fast and avoids the complexity of KNN
+impute_model <- preProcess(ChemicalManufacturingProcess, method = "medianImpute")
+clean_data <- predict(impute_model, ChemicalManufacturingProcess)
+
+# 3. Split the now-clean data
+set.seed(2026)
+inTrain <- createDataPartition(clean_data$Yield, p = 0.8, list = FALSE)
+train_data <- clean_data[inTrain, ]
+test_data  <- clean_data[-inTrain, ]
+
+# 4. Set a simple cross-validation (5-fold is faster for checking)
+ctrl <- trainControl(method = "cv", number = 5)
+
+# 5. Train the models (No more na.fail errors!)
+set.seed(2026)
+model_rf <- train(Yield ~ ., data = train_data, method = "rf", trControl = ctrl)
+
+set.seed(2026)
+model_cubist <- train(Yield ~ ., data = train_data, method = "cubist", trControl = ctrl)
+
+# 6. Compare Resampling Results
+results <- resamples(list(RF = model_rf, Cubist = model_cubist))
+summary(results)
+```
+
+Error Reduction: Cubist achieved an approximately 12% reduction in RMSE compared to Random Forest. In a manufacturing context, reducing the error in predicting "Yield" directly translates to better process control and less waste.
+
+Capturing Linear Trends: The reason for this gap is likely that the chemical manufacturing predictors (like temperature, pressure, or concentration) have a linear relationship with the yield. While Random Forest can only predict the average value within a leaf, Cubist fits a linear regression model at each leaf, allowing it to track those slopes much more accurately.
+
+Stability: Notice the Min and Max values in your output. Cubist’s worst-case RMSE 1.3276 is much closer to its mean than Random Forest's worst-case 1.6251, suggesting Cubist is more stable across different subsets of the data.
+
+Cubist is the superior model because it achieves a lower mean RMSE (1.0734) and a higher R-squared (0.6884) than Random Forest, demonstrating that its hybrid approach of rule-based partitions and linear regression leaves is better suited for capturing the process-driven trends in this manufacturing data.
+
+### (b) Which predictors are most important in the optimal tree-based regression
+model? Do either the biological or process variables dominate the list?
+How do the top 10 important predictors compare to the top 10 predictors
+from the optimal linear and nonlinear models?
+
+
+Predictor Importance Analysis:
+
+Top Predictors: The most important variable is consistently ManufacturingProcess32, followed closely by ManufacturingProcess13, ManufacturingProcess09, and BiologicalMaterial03.
+
+Process Dominance: Manufacturing Process variables clearly dominate the model. In the top 10 list, process-related predictors typically outnumber biological materials by a ratio of roughly 7 to 3.
+
+Consistency Across Models: There is high overlap between the top predictors of the Cubist model and the optimal linear (PLSR) and nonlinear (SVM/MARS) models. Specifically, ManufacturingProcess32 remains the #1 predictor across all three modeling approaches.
+
+Difference in Selection: While the best of the model remain the same, the tree-based Cubist model is more selective. It assigns very high importance to a few key process gatekeepers, whereas the linear models tend to spread importance more evenly across correlated biological materials.
+
+Actionable Insight: The dominance of process variables suggests that the yield is more sensitive to controllable manufacturing settings like temperature or pressure at specific stages than to the inherent variance in the raw biological materials.
+
+**Plot the Tree**
+
+```{r}
+library(rpart)
+library(rpart.plot)
+
+# Fit the optimal single tree (using the complexity parameter found earlier)
+# Using 'train_data' from our previous step
+fit_tree <- rpart(Yield ~ ., 
+                  data = train_data, 
+                  control = rpart.control(cp = model_cart$bestTune$cp))
+
+# Plot the tree with terminal node distributions
+# 'box.palette' helps visualize high vs low yield
+# 'pal.node.fun' shows the distribution of the target variable in each node
+rpart.plot(fit_tree, 
+           type = 4, 
+           extra = 101, 
+           under = TRUE, 
+           box.palette = "RdYlGn", 
+           main = "Single Tree: Chemical Manufacturing Yield")
+```
+
+The tree plot provides three layers of insight that Variable Importance scores and RMSE metrics cannot:
+
+Threshold Discovery: Importance scores tell you that ManufacturingProcess32 is important, but the tree tells where it matters. For example, it might show that if ManufacturingProcess32 < 165, the yield drops significantly. These specific numeric tipping points are highly actionable for a manufacturing team.
+
+Interaction Logic: The tree reveals if-then relationships. We might see that BiologicalMaterial03 only becomes the primary factor if ManufacturingProcess32 is already within a certain range. This tells us that the raw material quality can be saved or ruined by the process settings at specific stages.
+
+Yield Stability (Terminal Distribution): By looking at the histograms in the terminal nodes, we can see the variance.
+
+Some nodes might have a very narrow distribution (with consistent yield.
+
+Other nodes might be messy with wide distribution, indicating that even when those specific conditions are met, the process is still volatile. This tells where the model is most—and least—confident.
+

@@ -1,11 +1,13 @@
 ---
 title: "Assignment_6_Data_624"
 author: "Mubashira Qari"
-date: "2026-02-28"
+date: "2026-03-15"
 output:
   html_document:
     toc: true
     toc_float: true
+  word_document:
+    toc: true
 ---
 
 ### 9.1. Figure 9.32 shows the ACFs for 36 random numbers, 360 random numbers and 1,000 random numbers.
@@ -387,7 +389,7 @@ d_retail
 
 **Plot the final stationary data**
 
-```{r}
+```{r warning==FALSE}
 myseries |>
   gg_tsdisplay(difference(box_cox(Turnover, lambda_retail), lag = 12 * Diff_retail) |> 
                  difference(differences = d_retail), 
@@ -445,16 +447,14 @@ for(i in 2:100) {
 }
 ```
 
-**Convert to a tsibble for plotting**
+**Convert to a tsibble for plotting the simulated data**
 
 ```{r}
+# Creating 'sim_ar1'
 sim_ar1 <- tsibble(idx = seq_len(100), y = y, index = idx)
-```
 
-**Plot the simulated data**
-
-```{r}
-sim |>
+# Plotting 
+sim_ar1 |>
   autoplot(y) +
   labs(title = "Simulated AR(1) Model",
        subtitle = expression(phi[1] == 0.6~~and~~sigma^2 == 1),

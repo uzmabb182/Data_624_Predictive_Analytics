@@ -1,0 +1,74 @@
+---
+title: "Waterflow Pipe Project 1 Report"
+author: "Mubashira Qari"
+date: "2026-03-03"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    highlight: tango
+---
+
+
+## **1. Executive Summary & Data Sequencing**
+
+**Overview:**  
+Part C involves the analysis of water flow data from two separate pipes with different time stamps. The primary objective was to synchronize these datasets into a unified hourly timeline, verify their stationarity, and generate a one-week-forward forecast. Both datasets were successfully aggregated to an hourly frequency, providing a clear view of water movement across the system.
+
+## **2. Hourly Aggregation Methodology**
+
+**Purpose:**  
+Because the raw data for Pipe 1 and Pipe 2 contained multiple recordings at irregular intervals, a systematic aggregation process was required.
+
+**Time-Base Sequencing:**  
+All timestamps were parsed into a standard date-time format.
+
+**Hourly Averaging:**  
+For hours containing multiple recordings, the mean water flow was calculated to represent that hour, as required by the project specifications.
+
+**Synchronization:**  
+A master timeline was created to align Pipe 1 and Pipe 2, ensuring that every hour in the sequence was accounted for, even if one pipe had no data.
+
+## **3.Stationarity Analysis (KPSS Testing)**
+
+**Objective:**  
+Before forecasting, it was necessary to determine if the data was stationary (meaning its statistical properties like mean and variance are constant over time).
+
+**KPSS Test Results:**
+
+- **Pipe 1 Result:** $p\text{-value} = 0.10$  
+- **Pipe 2 Result:** $p\text{-value} = 0.10$
+
+**Interpretation:**  
+Since both $p\text{-values}$ are greater than the 0.05 significance threshold, we fail to reject the null hypothesis. This statistically confirms that the water flow data for both pipes is stationary.
+
+## **4. Forecasting Methodology (ARIMA)**
+
+**Model Choice:**  
+Given the stationary nature of the data, a Seasonal ARIMA model was selected to project future flows.
+
+**Model Selection:**  
+The ARIMA framework was chosen because it can effectively capture any remaining autocorrelation (the relationship between current and past hours) without needing complex trend-differencing.
+
+**Model Parameters:**  
+The models automatically identified the optimal lag structure to account for the unique flow "signatures" of Pipe 1 versus Pipe 2.
+
+## **5. Final Forecast Interpretation (One-Week Forward)**
+
+**Forecast Horizon:**  
+The model generated a forecast for the next 168 hours (one full week).
+
+**Pipe 1 – Consistent Flow Patterns:**  
+The forecast for Pipe 1 shows a stable continuation of historical flow rates, with confidence intervals indicating the range of expected variability.
+
+**Pipe 2 – Volume Projections:**  
+Pipe 2 demonstrates a slightly different flow profile, which the ARIMA model captured to provide a reliable hourly estimate for the upcoming week.
+
+## **Conclusion & Data Export**
+
+**Summary:**  
+The analysis confirms that the water flow data is stationary and highly suitable for short-term forecasting. The resulting model provides a detailed 168-hour outlook, which has been exported to an Excel-readable format for operational use.
+
+- **Total Forecasted Volume:** The projections allow management to anticipate total water throughput for the next 7 days.  
+- **Data Availability:** The final numerical forecast has been saved as `Waterflow_OneWeek_Forecast.csv`.
