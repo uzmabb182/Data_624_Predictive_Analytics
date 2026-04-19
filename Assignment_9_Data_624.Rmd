@@ -424,20 +424,28 @@ Actionable Insight: The dominance of process variables suggests that the yield i
 library(rpart)
 library(rpart.plot)
 
-# Fit the optimal single tree (using the complexity parameter found earlier)
-# Using 'train_data' from our previous step
+# Safely identify the best CP (Complexity Parameter)
+# If model_cart exists, use its best tune; otherwise, use a standard default (0.01)
+if (exists("model_cart")) {
+  best_cp <- model_cart$bestTune$cp
+} else {
+  best_cp <- 0.01 
+}
+
+# Fit the single tree using the clean training data
+# Using na.action = na.rpart allows rpart to handle any remaining NAs internally
 fit_tree <- rpart(Yield ~ ., 
                   data = train_data, 
-                  control = rpart.control(cp = model_cart$bestTune$cp))
+                  control = rpart.control(cp = best_cp),
+                  na.action = na.rpart)
 
 # Plot the tree with terminal node distributions
-# 'box.palette' helps visualize high vs low yield
-# 'pal.node.fun' shows the distribution of the target variable in each node
 rpart.plot(fit_tree, 
            type = 4, 
            extra = 101, 
            under = TRUE, 
            box.palette = "RdYlGn", 
+           fallen.leaves = TRUE,
            main = "Single Tree: Chemical Manufacturing Yield")
 ```
 

@@ -1,0 +1,160 @@
+---
+title: "Assignment_10_Data_624"
+author: "Mubashira Qari"
+date: "2026-04-18"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+  word_document:
+    toc: true
+---
+
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+library(fpp3)
+library(naniar)
+
+# 2. Read the raw data
+url <- "https://raw.githubusercontent.com/uzmabb182/Data_624_Predictive_Analytics/refs/heads/main/GroceryDataSet.csv"
+grocery_df <- read_csv(url)
+
+#view(grocery_df)
+```
+
+**Transform Data to Long Format**
+
+we will convert your wide table (with many empty columns) into a Long Format list.
+
+```{r}
+# Add a Transaction ID to each row
+# Pivot the data into a single column
+# Remove the empty (NA) cells
+grocery_long <- grocery_df |>
+  mutate(tid = row_number()) |>
+  pivot_longer(cols = -tid, names_to = "item_index", values_to = "item") |>
+  filter(!is.na(item)) |>
+  select(tid, item)
+
+# View the first few rows to confirm it worked
+head(grocery_long)
+
+```
+
+**Calculate Item Frequencies (Support)**
+
+we need to calculate the Support for each individual item. This helps you identify the most frequent items in the dataset
+
+```{r}
+# Count the total number of unique transactions (receipts)
+total_transactions <- n_distinct(grocery_long$tid)
+
+# Calculate the count and support (percentage) for each item
+item_support <- grocery_long |>
+  group_by(item) |>
+  summarize(count = n()) |>
+  mutate(support = count / total_transactions) |>
+  arrange(desc(count))
+
+# View the top 10 most frequent items
+head(item_support, 10)
+```
+
+*Visualize Item Frequencies**
+
+```{r}
+# 1. Select the top 10 items from the support table we created
+top_items <- item_support |>
+  head(10)
+
+# 2. Create a bar chart
+library(ggplot2)
+
+ggplot(top_items, aes(x = reorder(item, support), y = support)) +
+  geom_col(fill = "skyblue") +
+  coord_flip() +  # This flips the axis so the item names are easy to read
+  labs(
+    title = "Top 10 Most Frequent Items (Support)",
+    x = "Grocery Item",
+    y = "Support (Percentage of Baskets)"
+  ) +
+  theme_minimal()
+
+```
+
+
+**Find Item Pairs and Calculate Metrics**
+
+next step is to find pairs of items that were bought together in the same receipt. This allows us to calculate Confidence and Lift.
+
+We finds every combination of two items in a single basket and calculates the required metrics.
+
+```{r}
+# Create pairs of items bought together in the same transaction (tid)
+item_pairs <- grocery_long |>
+  inner_join(grocery_long, by = "tid", relationship = "many-to-many") |>
+  # Filter to keep only unique pairs (avoids "milk & milk" and double counting "milk & bread" / "bread & milk")
+  filter(item.x < item.y) |>
+  group_by(item.x, item.y) |>
+  summarize(pair_count = n(), .groups = 'drop')
+
+# Join with individual item counts to calculate Support, Confidence, and Lift
+# We join 'item_support' twice: once for the first item (LHS) and once for the second (RHS)
+rules_manual <- item_pairs |>
+  inner_join(item_support, by = c("item.x" = "item")) |>
+  rename(support_lhs = support, count_lhs = count) |>
+  inner_join(item_support, by = c("item.y" = "item")) |>
+  rename(support_rhs = support, count_rhs = count) |>
+  mutate(
+    support = pair_count / total_transactions,
+    confidence = pair_count / count_lhs,
+    lift = support / (support_lhs * support_rhs)
+  )
+
+# View the top 10 rules by Lift as required by your assignment
+top_10_lift <- rules_manual |>
+  arrange(desc(lift)) |>
+  head(10)
+
+print(top_10_lift)
+```
+
+**Extra Credit - Simple Cluster Analysis**
+
+```{r}
+# Identify the top 20 most frequent items to keep the chart readable
+top_20_items <- item_support |>
+  head(20) |>
+  pull(item)
+
+# Create a binary matrix (Transactions vs. Items)
+# This table marks 1 if an item was in a basket, and 0 if it wasn't
+cluster_matrix <- grocery_long |>
+  filter(item %in% top_20_items) |>
+  mutate(present = 1) |>
+  pivot_wider(names_from = item, values_from = present, values_fill = 0) |>
+  select(-tid)
+
+# Calculate the distance between items
+# We use 'method = binary' because our data is 1s and 0s
+# We transpose 't()' because we want to cluster the items, not the receipts
+item_distance <- dist(t(cluster_matrix), method = "binary")
+
+# Perform Hierarchical Clustering using Ward's method
+hc <- hclust(item_distance, method = "ward.D2")
+
+# Plot the Dendrogram (the cluster tree)
+plot(hc, main = "Cluster Analysis: Top 20 Grocery Items", 
+     xlab = "Items", sub = "Items grouped by similar purchasing patterns",
+     col = "#2E8B57") # Dark green color
+```
+We see some very strong relationships. For example, your rule for {flour} -> {sugar} with a Lift of 8.46 is a classic "baking" cluster—those items are bought together over 8 times more often than random chance would suggest.
+
+
+
+
+```{r}
+```
+
